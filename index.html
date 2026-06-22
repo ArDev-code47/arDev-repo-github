@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArDev - Portfolio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      background-color: #0f0f0f; /* Hitam pekat */
+    }
+    
+    .hero-bg { 
+      background: linear-gradient(135deg, #1e3a8a 0%, #6b21a8 100%); 
+    }
+
+    .fade-in { 
+      opacity: 0; 
+      transform: translateY(30px); 
+      transition: all 0.8s ease-out; 
+    }
+    
+    .fade-in.visible { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+
+    .hero-text { 
+      animation: slideUp 1s ease-out forwards; 
+    }
+
+    @keyframes slideUp { 
+      from { opacity: 0; transform: translateY(50px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+
+    .card-hover { 
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    
+    .card-hover:hover { 
+      transform: translateY(-10px) scale(1.03); 
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3); 
+    }
+
+    /* Dark Mode Styling */
+    .dark-section {
+      background-color: #1a1a1a;
+    }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-200">
+
+  <!-- Hero Section -->
+  <section class="min-h-screen hero-bg text-white flex items-center relative overflow-hidden">
+    <div class="absolute text-8xl top-20 left-10 opacity-10 animate-pulse">💻</div>
+    <div class="absolute text-8xl bottom-32 right-16 opacity-10 animate-pulse delay-700">🚀</div>
+    <div class="absolute text-7xl top-1/2 left-1/3 opacity-10 animate-pulse delay-1000">⚡</div>
+
+    <div class="max-w-4xl mx-auto text-center px-6 relative z-10">
+      <h1 class="text-5xl md:text-6xl font-bold mb-4 hero-text">Halo, Saya <span class="text-yellow-300">ArDev</span></h1>
+      <p class="text-2xl mb-6 fade-in">Mahasiswa Rekayasa Perangkat Lunak</p>
+      <p class="text-xl mb-10 max-w-lg mx-auto fade-in">Ini adalah website portofolio pribadi saya</p>
+      
+      <a href="#games" 
+         class="inline-block bg-white text-gray-900 font-semibold px-10 py-5 rounded-full text-lg hover:bg-yellow-300 hover:text-black transition-all duration-300">
+        Lihat Game Saya ↓
+      </a>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="py-20 dark-section">
+    <div class="max-w-4xl mx-auto px-6">
+      <h2 class="text-3xl font-bold text-center mb-10 text-white fade-in">Tentang Saya</h2>
+      <p class="text-lg text-gray-300 leading-relaxed text-center max-w-2xl mx-auto fade-in">
+        Mahasiswa baru jurusan RPL yang antusias belajar programming. 
+        Saya suka membuat game dan website interaktif.
+      </p>
+    </div>
+  </section>
+
+  <!-- Skills -->
+  <section class="py-20 bg-gray-900">
+    <div class="max-w-4xl mx-auto px-6">
+      <h2 class="text-3xl font-bold text-center mb-12 text-white fade-in">Skill yang Sedang Saya Pelajari</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow card-hover fade-in text-gray-200">HTML5</div>
+        <div class="bg-gray-800 p-8 rounded-2xl shadow card-hover fade-in text-gray-200">CSS3</div>
+        <div class="bg-gray-800 p-8 rounded-2xl shadow card-hover fade-in text-gray-200">JavaScript</div>
+        <div class="bg-gray-800 p-8 rounded-2xl shadow card-hover fade-in text-gray-200">Tailwind CSS</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Games Section -->
+  <section id="games" class="py-20 dark-section">
+    <div class="max-w-5xl mx-auto px-6">
+      <h2 class="text-3xl font-bold text-center mb-4 text-white fade-in">Game Saya</h2>
+      <p class="text-center text-gray-400 mb-12 fade-in">Rubix Cube Web Game - Game 3D interaktif pertama saya</p>
+      
+      <div class="card-hover bg-gray-800 rounded-3xl overflow-hidden shadow max-w-2xl mx-auto">
+        <div class="p-8">
+          <h3 class="font-bold text-2xl mb-3 text-white">Rubix Cube 3D</h3>
+          <p class="text-gray-400 mb-8">Game puzzle Rubik's Cube berbasis web. Latih logika dan kesabaran Anda dengan memutar kubus 3D!</p>
+          
+          <div class="text-center">
+            <a href="./game/index.html" 
+               target="_blank"
+               class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-14 py-6 rounded-2xl text-xl transition-all shadow-lg">
+              ▶️ Mainkan Game Rubix Cube
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects -->
+  <section id="projects" class="py-20 dark-section">
+    <div class="max-w-4xl mx-auto px-6">
+      <h2 class="text-3xl font-bold text-center mb-10 text-white fade-in">Proyek Lainnya</h2>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="border border-gray-700 bg-gray-800 rounded-3xl overflow-hidden card-hover fade-in">
+          <div class="h-56 bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center text-6xl">
+            🌐
+          </div>
+          <div class="p-8">
+            <h3 class="font-bold text-xl text-white">Website Portfolio</h3>
+            <p class="text-gray-400 mt-3">Proyek pertama saya menggunakan HTML, CSS, dan Tailwind CSS dengan animasi.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-black text-gray-400 py-12">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <p class="text-lg">© 2026 ArDev • Mahasiswa RPL</p>
+    </div>
+  </footer>
+
+  <!-- Script Animasi -->
+  <script>
+    const fadeElements = document.querySelectorAll('.fade-in');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.1 });
+    fadeElements.forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
