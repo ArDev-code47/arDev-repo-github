@@ -1,839 +1,446 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rubix Cube Web Game</title>
-    <style>
-        /* --- 1. CSS RESET & VARIABLES --- */
-        :root {
-            --bg-color: #1a1a2e;
-            --text-color: #ffffff;
-            --primary-color: #e94560;
-            --secondary-color: #16213e;
-            --accent-color: #0f3460;
-            --cube-size: 60px; /* Ukuran dasar satu kubie */
-            --gap: 2px;
-            --speed: 0.3s;
-            
-            /* Warna Wajah Kubus */
-            --c-front: #009E60; /* Green */
-            --c-back: #0051BA;  /* Blue */
-            --c-right: #C41E3A; /* Red */
-            --c-left: #FF5800;  /* Orange */
-            --c-up: #FFFFFF;    /* White */
-            --c-down: #FFD500;  /* Yellow */
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            height: 100vh;
-            overflow: hidden; /* Mencegah scroll pada game */
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* --- 2. UI LAYOUT & SCREENS --- */
-        .screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-color);
-            transition: opacity 0.5s ease, visibility 0.5s;
-            z-index: 10;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: var(--primary-color);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        h2 {
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        p {
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-            max-width: 600px;
-        }
-
-        .btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 1.1rem;
-            border-radius: 50px;
-            cursor: pointer;
-            margin: 10px;
-            transition: transform 0.2s, background-color 0.2s;
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-
-        .btn:hover {
-            background-color: #d63650;
-            transform: scale(1.05);
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn-secondary {
-            background-color: var(--accent-color);
-        }
-
-        /* --- 3. GAME INTERFACE --- */
-        #game-screen {
-            justify-content: flex-start;
-            padding-top: 10px;
-        }
-
-        .hud {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 20px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 10px;
-            margin-bottom: 10px;
-            max-width: 600px;
-        }
-
-        .hud-item {
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .hud-label {
-            color: #aaa;
-            font-size: 0.9rem;
-            display: block;
-        }
-
-        /* Area Kubus 3D */
-        .scene {
-            width: calc(var(--cube-size) * 3);
-            height: calc(var(--cube-size) * 3);
-            perspective: 1000px;
-            margin: 20px auto;
-            touch-action: none; /* Penting untuk drag handling */
-        }
-
-        .pivot {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transform: rotateX(-30deg) rotateY(-45deg); /* Default View */
-            transition: transform 0.1s linear; /* Untuk drag camera */
-        }
-
-        /* Konstruksi Kubus */
-        .cubie {
-            position: absolute;
-            width: var(--cube-size);
-            height: var(--cube-size);
-            transform-style: preserve-3d;
-            transition: transform var(--speed) ease-in-out; /* Animasi rotasi slice */
-        }
-
-        .face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 2px solid black;
-            border-radius: 4px;
-            opacity: 1;
-            backface-visibility: hidden; /* Optimasi */
-        }
-
-        /* Posisi Wajah pada satu Cubie */
-        .face--front { transform: rotateY(0deg) translateZ(calc(var(--cube-size)/2)); }
-        .face--back  { transform: rotateY(180deg) translateZ(calc(var(--cube-size)/2)); }
-        .face--right { transform: rotateY(90deg) translateZ(calc(var(--cube-size)/2)); }
-        .face--left  { transform: rotateY(-90deg) translateZ(calc(var(--cube-size)/2)); }
-        .face--up    { transform: rotateX(90deg) translateZ(calc(var(--cube-size)/2)); }
-        .face--down  { transform: rotateX(-90deg) translateZ(calc(var(--cube-size)/2)); }
-
-        /* Warna Inner (Hitam) */
-        .cubie::after {
-            content: '';
-            position: absolute;
-            width: 90%;
-            height: 90%;
-            background: #000;
-            top: 5%;
-            left: 5%;
-            transform: translateZ(-1px);
-        }
-
-        /* Kategori Warna Stiker */
-        .sticker-front { background-color: var(--c-front); }
-        .sticker-back { background-color: var(--c-back); }
-        .sticker-right { background-color: var(--c-right); }
-        .sticker-left { background-color: var(--c-left); }
-        .sticker-up { background-color: var(--c-up); }
-        .sticker-down { background-color: var(--c-down); }
-
-        /* Kontrol On-Screen (Untuk Mobile/Mouse) */
-        .controls-area {
-            width: 100%;
-            max-width: 600px;
-            margin-top: 10px;
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 5px;
-        }
-
-        .ctrl-btn {
-            background: var(--secondary-color);
-            border: 1px solid var(--accent-color);
-            color: white;
-            padding: 10px 0;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        
-        .ctrl-btn:hover { background: var(--accent-color); }
-        .ctrl-btn:active { background: var(--primary-color); }
-
-        /* Tombol Game Utama */
-        .game-actions {
-            margin-top: 15px;
-            display: flex;
-            gap: 15px;
-        }
-
-        /* --- 4. MODAL / POPUP --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transition: 0.3s;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-content {
-            background: var(--secondary-color);
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            border: 2px solid var(--primary-color);
-            max-width: 90%;
-            width: 400px;
-            box-shadow: 0 0 20px rgba(233, 69, 96, 0.4);
-        }
-
-        .result-stat {
-            font-size: 1.5rem;
-            margin: 10px 0;
-            color: var(--text-color);
-        }
-
-        /* Responsiveness */
-        @media (max-width: 600px) {
-            :root { --cube-size: 50px; }
-            h1 { font-size: 2rem; }
-            .controls-area { grid-template-columns: repeat(3, 1fr); }
-            .ctrl-btn { padding: 15px 0; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber Ninja Runner</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0a0a0a;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #00ffcc;
+    }
+    canvas {
+      image-rendering: pixelated;
+      border: 4px solid #ff00ff;
+      box-shadow: 0 0 40px #ff00ff, 0 0 80px rgba(255, 0, 255, 0.3);
+    }
+    #ui {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      z-index: 100;
+      pointer-events: none;
+      width: 320px;
+    }
+    .score-container {
+      background: rgba(10, 10, 30, 0.85);
+      border: 2px solid #00ffff;
+      padding: 12px 18px;
+      border-radius: 8px;
+      box-shadow: 0 0 20px #00ffff;
+    }
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 22px;
+      font-weight: bold;
+      text-shadow: 0 0 10px currentColor;
+    }
+    #score { color: #ffff00; }
+    #distance { color: #00ffcc; }
+    .label { font-size: 14px; opacity: 0.8; letter-spacing: 1px; }
+  </style>
 </head>
 <body>
+  <canvas id="game" width="800" height="400"></canvas>
 
-    <!-- --- HALAMAN BERANDA --- -->
-    <section id="home-screen" class="screen">
-        <h1>Rubix Cube</h1>
-        <p>Latih logika dan konsentrasimu dengan puzzle klasik 3D ini.</p>
-        <div>
-            <button class="btn" onclick="app.startGame()">Mulai Bermain</button>
-        </div>
-        <div style="margin-top: 20px;">
-            <button class="btn btn-secondary" onclick="app.showScreen('guide-screen')">Panduan</button>
-            <button class="btn btn-secondary" onclick="app.showScreen('about-screen')">Tentang</button>
-        </div>
-    </section>
-
-    <!-- --- HALAMAN PANDUAN --- -->
-    <section id="guide-screen" class="screen hidden">
-        <h2>Cara Bermain</h2>
-        <div style="text-align: left; background: var(--secondary-color); padding: 20px; border-radius: 10px;">
-            <p><strong>1. Tujuan:</strong> Buat setiap sisi kubus memiliki warna yang seragam (sama).</p>
-            <p><strong>2. Kontrol Rotasi Kubus (Kamera):</strong><br>Klik dan seret (drag) pada area kosong atau kubus untuk memutar sudut pandang.</p>
-            <p><strong>3. Kontrol Rotasi Lapisan (Gerakan):</strong><br>Gunakan tombol di layar atau Keyboard:</p>
-            <ul style="margin-left: 20px; margin-bottom: 15px;">
-                <li><strong>F / B:</strong> Depan / Belakang</li>
-                <li><strong>U / D:</strong> Atas / Bawah</li>
-                <li><strong>L / R:</strong> Kiri / Kanan</li>
-                <li>Tambahkan tombol <strong>Shift</strong> untuk rotasi berlawanan arah jarum jam (Contoh: Shift+L).</li>
-            </ul>
-        </div>
-        <button class="btn" onclick="app.showScreen('home-screen')">Kembali</button>
-    </section>
-
-    <!-- --- HALAMAN TENTANG --- -->
-    <section id="about-screen" class="screen hidden">
-        <h2>Tentang Sistem</h2>
-        <p><strong>Nama:</strong> Rubix Cube Web Game</p>
-        <p><strong>Versi:</strong> 1.0 MVP</p>
-        <p><strong>Pengembang:</strong> by ArDev</p>
-        <p><strong>Deskripsi:</strong> Aplikasi web berbasis puzzle 3D untuk melatih logika. Dibangun menggunakan HTML5, CSS3, dan Vanilla JavaScript tanpa framework eksternal.</p>
-        <button class="btn" onclick="app.showScreen('home-screen')">Kembali</button>
-    </section>
-
-    <!-- --- HALAMAN PERMAINAN --- -->
-    <section id="game-screen" class="screen hidden">
-        <header class="hud">
-            <div class="hud-item">
-                <span class="hud-label">Waktu</span>
-                <span id="timer">00:00</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-label">Langkah</span>
-                <span id="move-counter">0</span>
-            </div>
-        </header>
-
-        <!-- Area Visual 3D -->
-        <div class="scene" id="scene">
-            <div class="pivot" id="pivot">
-                <!-- 27 Kubies akan digenerate di sini oleh JavaScript -->
-            </div>
-        </div>
-
-        <!-- Tombol Aksi Game -->
-        <div class="game-actions">
-            <button class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;" onclick="game.shuffle()">Acak (Shuffle)</button>
-            <button class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;" onclick="app.showScreen('home-screen')">Keluar</button>
-        </div>
-
-        <!-- Tombol Kontrol Lapisan -->
-        <div class="controls-area">
-            <button class="ctrl-btn" onclick="game.handleInput('L', 1)">L</button>
-            <button class="ctrl-btn" onclick="game.handleInput('R', 1)">R</button>
-            <button class="ctrl-btn" onclick="game.handleInput('U', 1)">U</button>
-            <button class="ctrl-btn" onclick="game.handleInput('D', 1)">D</button>
-            <button class="ctrl-btn" onclick="game.handleInput('F', 1)">F</button>
-            <button class="ctrl-btn" onclick="game.handleInput('B', 1)">B</button>
-            
-            <button class="ctrl-btn" onclick="game.handleInput('L', -1)">L'</button>
-            <button class="ctrl-btn" onclick="game.handleInput('R', -1)">R'</button>
-            <button class="ctrl-btn" onclick="game.handleInput('U', -1)">U'</button>
-            <button class="ctrl-btn" onclick="game.handleInput('D', -1)">D'</button>
-            <button class="ctrl-btn" onclick="game.handleInput('F', -1)">F'</button>
-            <button class="ctrl-btn" onclick="game.handleInput('B', -1)">B'</button>
-        </div>
-        <p style="font-size: 0.8rem; margin-top: 10px; color: #888;">Gunakan Keyboard (L,R,U,D,F,B) + Shift untuk aksi cepat.</p>
-    </section>
-
-    <!-- --- MODAL HASIL (WIN) --- -->
-    <div id="result-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 style="color: var(--primary-color);">Selamat! 🎉</h2>
-            <p>Kamu berhasil menyelesaikan Rubix Cube!</p>
-            <div class="result-stat">
-                <span id="final-time">00:00</span>
-            </div>
-            <div class="result-stat">
-                <span id="final-moves">0</span> Langkah
-            </div>
-            <button class="btn" onclick="game.resetGame()">Main Lagi</button>
-            <button class="btn btn-secondary" onclick="app.showScreen('home-screen')">Ke Menu Utama</button>
-        </div>
+  <div id="ui">
+    <div class="score-container">
+      <div class="score-row"><span class="label">SCORE</span><span id="score">00000</span></div>
+      <div class="score-row"><span class="label">DISTANCE</span><span id="distance">0m</span></div>
     </div>
+  </div>
 
-    <!-- --- JAVASCRIPT --- -->
-    <script>
-        /**
-         * Logika Utama Aplikasi (Navigation, State)
-         */
-        const app = {
-            screens: ['home-screen', 'guide-screen', 'about-screen', 'game-screen'],
-            
-            showScreen: (screenId) => {
-                app.screens.forEach(id => {
-                    document.getElementById(id).classList.add('hidden');
-                });
-                document.getElementById(screenId).classList.remove('hidden');
-            },
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const distanceEl = document.getElementById('distance');
 
-            startGame: () => {
-                app.showScreen('game-screen');
-                game.init();
-            }
-        };
+    let audioCtx;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    function playBeep(frequency = 800, duration = 80, type = 'sine', volume = 0.3) {
+      initAudio();
+      const oscillator = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+      gain.gain.value = volume;
+      oscillator.connect(gain);
+      gain.connect(audioCtx.destination);
+      oscillator.start();
+      setTimeout(() => oscillator.stop(), duration);
+    }
 
-        /**
-         * Logika Permainan Rubix Cube
-         */
-        const game = {
-            isPlaying: false,
-            isAnimating: false,
-            timerInterval: null,
-            startTime: 0,
-            moves: 0,
-            
-            // Elemen DOM
-            pivot: document.getElementById('pivot'),
-            timerDisplay: document.getElementById('timer'),
-            moveDisplay: document.getElementById('move-counter'),
-            modal: document.getElementById('result-modal'),
+    let gameRunning = false;
+    let score = 0;
+    let distance = 0;
+    let highScore = localStorage.getItem('ninjaHighScore') || 0;
+    let speed = 6;
+    let gravity = 0.8;
+    let velocity = 0;
+    let isJumping = false;
+    let isSliding = false;
+    let frame = 0;
 
-            // State Rotasi Kamera
-            rotX: -30,
-            rotY: -45,
+    const player = { x: 100, y: 250, width: 45, height: 65, baseY: 250 };
 
-            // Data Kubus: Array 27 objek, merepresentasikan posisi x,y,z (-1, 0, 1)
-            // dan warna masing-masing sisi.
-            cubies: [], 
+    let obstacles = [];
+    let collectibles = [];
+    let particles = [];
+    let scorePopups = [];
 
-            // Inisialisasi
-            init: () => {
-                game.resetGameData();
-                game.createCube();
-                game.setupInputs();
-            },
+    let bgX1 = 0, bgX2 = 0, bgX3 = 0;
 
-            resetGameData: () => {
-                clearInterval(game.timerInterval);
-                game.timerDisplay.innerText = "00:00";
-                game.moveDisplay.innerText = "0";
-                game.moves = 0;
-                game.isPlaying = false;
-                game.modal.classList.remove('active');
-                game.rotX = -30;
-                game.rotY = -45;
-                game.updateCamera();
-            },
+    function updateUI() {
+      scoreEl.textContent = Math.floor(score).toString().padStart(5, '0');
+      distanceEl.textContent = `${Math.floor(distance)}m`;
+    }
 
-            // Membuat struktur HTML 27 kubies
-            createCube: () => {
-                game.pivot.innerHTML = '';
-                game.cubies = [];
-                
-                let idCounter = 0;
-                // Loop x, y, z dari -1 sampai 1
-                for (let x = -1; x <= 1; x++) {
-                    for (let y = -1; y <= 1; y++) {
-                        for (let z = -1; z <= 1; z++) {
-                            const el = document.createElement('div');
-                            el.className = 'cubie';
-                            el.id = `cubie-${idCounter++}`;
-                            
-                            // Posisi awal berdasarkan koordinat
-                            // Perkalian dengan 100% (plus gap) bisa ditangani via CSS nanti
-                            // Tapi kita gunakan translate3d langsung di sini agar presisi
-                            // Kita asumsikan 1 unit = 100% dari parent / 3 (secara visual)
-                            // Lebih mudah: Kita gunakan CSS variable dan calc, 
-                            // tapi untuk transform absolute, kita set px %.
-                            // Ukuran kubie = var(--cube-size).
-                            // Offset = (x * size) + (gap * x) ... 
-                            // Simplifikasi: Kita ubah transform CSS setelah create.
-                            
-                            // Tambahkan 6 wajah
-                            const faces = ['front', 'back', 'right', 'left', 'up', 'down'];
-                            faces.forEach(face => {
-                                const div = document.createElement('div');
-                                div.className = `face face--${face} sticker-${face}`;
-                                el.appendChild(div);
-                            });
+    function createScorePopup(x, y, points) {
+      scorePopups.push({ x, y, points, life: 45, vy: -1.8 });
+    }
 
-                            game.pivot.appendChild(el);
-                            
-                            // Simpan data state
-                            game.cubies.push({
-                                id: el.id,
-                                el: el,
-                                x: x,
-                                y: y,
-                                z: z,
-                                // Orientasi warna saat ini. 
-                                // Kita simpan class warna untuk setiap sisi 'f,b,r,l,u,d'
-                                colors: {
-                                    f: 'sticker-front', b: 'sticker-back', 
-                                    r: 'sticker-right', l: 'sticker-left', 
-                                    u: 'sticker-up', d: 'sticker-down'
-                                }
-                            });
-                        }
-                    }
-                }
-                game.renderCubePositions();
-            },
+    function createObstacle() {
+      const types = ['drone', 'barrier', 'neon'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      const obs = { x: canvas.width + 50, y: type === 'barrier' ? 210 : 275, width: type === 'drone' ? 45 : 40, height: type === 'drone' ? 35 : 65, type: type, passed: false };
+      obstacles.push(obs);
+    }
 
-            // Update posisi visual (DOM) berdasarkan state x,y,z
-            renderCubePositions: () => {
-                const size = 60; // harus cocok dengan CSS var --cube-size
-                const gap = 2;   // gap kecil
-                
-                game.cubies.forEach(c => {
-                    // Geser ke tengah (offset 1.5 * size) + koordinat
-                    const offset = 1.5 * (size + gap);
-                    const xPos = (c.x * (size + gap));
-                    const yPos = (-c.y * (size + gap)); // Y ke atas di 3D css biasanya negatif
-                    const zPos = (c.z * (size + gap));
-                    
-                    // Terapkan posisi
-                    // Kita TIDAK merotasi elemen cubie itu sendiri secara permanen,
-                    // kita hanya menukar warnanya saat rotasi terjadi.
-                    c.el.style.transform = `translate3d(${xPos}px, ${yPos}px, ${zPos}px)`;
-                    
-                    // Update warna kelas sesuai state logic
-                    c.el.querySelector('.face--front').className = `face face--front ${c.colors.f}`;
-                    c.el.querySelector('.face--back').className = `face face--back ${c.colors.b}`;
-                    c.el.querySelector('.face--right').className = `face face--right ${c.colors.r}`;
-                    c.el.querySelector('.face--left').className = `face face--left ${c.colors.l}`;
-                    c.el.querySelector('.face--up').className = `face face--up ${c.colors.u}`;
-                    c.el.querySelector('.face--down').className = `face face--down ${c.colors.d}`;
-                });
-            },
+    function createCollectible() {
+      collectibles.push({ x: canvas.width + Math.random() * 300, y: 140 + Math.random() * 140, width: 22, height: 22 });
+    }
 
-            // Shuffle (Acak)
-            shuffle: () => {
-                if(game.isAnimating) return;
-                game.resetGameData(); // Reset win status
-                
-                const moves = ['U','D','L','R','F','B'];
-                const count = 15; // Jumlah putaran acak
-                let i = 0;
+    function createParticle(x, y) {
+      particles.push({ x, y, vx: Math.random()*4-2, vy: Math.random()*-3-1, life: 28, color: '#00ffff' });
+    }
 
-                // Kecepatan shuffle (tanpa animasi lambat)
-                // Kita gunakan interval cepat
-                const shuffleInterval = setInterval(() => {
-                    const randomMove = moves[Math.floor(Math.random() * moves.length)];
-                    const randomDir = Math.random() > 0.5 ? 1 : -1;
-                    
-                    // Eksekusi logika rotasi tanpa animasi visual yang panjang
-                    game.rotateLayer(randomMove, randomDir, false); 
-                    
-                    i++;
-                    if(i >= count) {
-                        clearInterval(shuffleInterval);
-                        game.startTimer();
-                        game.isPlaying = true;
-                    }
-                }, 50);
-            },
+    function drawBackground() {
+      ctx.fillStyle = '#0a001f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            startTimer: () => {
-                game.startTime = Date.now();
-                game.timerInterval = setInterval(() => {
-                    const delta = Math.floor((Date.now() - game.startTime) / 1000);
-                    const m = Math.floor(delta / 60).toString().padStart(2, '0');
-                    const s = (delta % 60).toString().padStart(2, '0');
-                    game.timerDisplay.innerText = `${m}:${s}`;
-                }, 1000);
-            },
+      ctx.fillStyle = '#1a0033';
+      for (let i = 0; i < 8; i++) {
+        let x = (i * 120 + bgX3 * 0.2) % (canvas.width + 200) - 100;
+        ctx.fillRect(x, 90, 85, 320);
+      }
+      ctx.fillStyle = '#2a0044';
+      for (let i = 0; i < 6; i++) {
+        let x = (i * 180 + bgX2 * 0.5) % (canvas.width + 300) - 100;
+        ctx.fillRect(x, 140, 130, 270);
+      }
 
-            stopTimer: () => {
-                clearInterval(game.timerInterval);
-            },
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0, 315, canvas.width, 85);
+      ctx.strokeStyle = '#ff00ff';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, 315);
+      ctx.lineTo(canvas.width, 315);
+      ctx.stroke();
+    }
 
-            // Input Handler
-            handleInput: (move, direction) => {
-                if (!game.isPlaying) return; // Belum shuffle
-                if (game.isAnimating) return;
+    function drawNinja() {
+      const px = player.x, py = player.y;
+      const anim = Math.floor(frame / 6) % 2;
+      ctx.save();
+      ctx.shadowColor = '#ff00ff';
+      ctx.shadowBlur = 25;
 
-                game.rotateLayer(move, direction, true);
-            },
+      ctx.fillStyle = '#111111';
+      ctx.fillRect(px + 10, py + 10, 28, 45);
+      ctx.fillStyle = '#222222';
+      ctx.fillRect(px + 15, py + 5, 20, 20);
 
-            setupInputs: () => {
-                // Keyboard
-                document.addEventListener('keydown', (e) => {
-                    if (!game.isPlaying) return;
-                    const key = e.key.toUpperCase();
-                    const validKeys = ['L', 'R', 'U', 'D', 'F', 'B'];
-                    if (validKeys.includes(key)) {
-                        const dir = e.shiftKey ? -1 : 1;
-                        game.handleInput(key, dir);
-                    }
-                });
+      ctx.fillStyle = '#ff0044';
+      ctx.fillRect(px + 13, py + 12, 24, 6);
 
-                // Mouse/Touch Drag untuk Kamera
-                let isDragging = false;
-                let lastX, lastY;
-                const scene = document.getElementById('scene');
+      ctx.fillStyle = '#00ffff';
+      ctx.fillRect(px + 19, py + 13, 4, 4);
+      ctx.fillRect(px + 27, py + 13, 4, 4);
 
-                const startDrag = (x, y) => {
-                    isDragging = true;
-                    lastX = x;
-                    lastY = y;
-                };
+      ctx.fillStyle = '#111111';
+      ctx.fillRect(px + 5, py + 20, 12, 8);
+      ctx.fillRect(px + 33, py + 20, 12, 8);
 
-                const moveDrag = (x, y) => {
-                    if (!isDragging) return;
-                    const deltaX = x - lastX;
-                    const deltaY = y - lastY;
-                    
-                    game.rotY += deltaX * 0.5;
-                    game.rotX -= deltaY * 0.5;
-                    
-                    game.updateCamera();
-                    
-                    lastX = x;
-                    lastY = y;
-                };
+      if (isSliding) {
+        ctx.fillRect(px + 12, py + 48, 26, 18);
+      } else {
+        ctx.fillRect(px + 12, py + 50 + (anim * 3), 10, 18);
+        ctx.fillRect(px + 25, py + 50 - (anim * 3), 10, 18);
+      }
 
-                const endDrag = () => { isDragging = false; };
+      ctx.strokeStyle = '#cccccc';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(px + 35, py + 25);
+      ctx.lineTo(px + 48, py + 35);
+      ctx.stroke();
+      ctx.restore();
+    }
 
-                // Mouse Events
-                scene.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
-                window.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY));
-                window.addEventListener('mouseup', endDrag);
+    function drawObstacles() {
+      for (let obs of obstacles) {
+        ctx.fillStyle = obs.type === 'drone' ? '#ff3366' : (obs.type === 'barrier' ? '#9900ff' : '#00ffff');
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+      }
+    }
 
-                // Touch Events
-                scene.addEventListener('touchstart', e => startDrag(e.touches[0].clientX, e.touches[0].clientY));
-                window.addEventListener('touchmove', e => moveDrag(e.touches[0].clientX, e.touches[0].clientY));
-                window.addEventListener('touchend', endDrag);
-            },
+    function drawCollectibles() {
+      for (let c of collectibles) {
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#ffff00';
+        ctx.fillStyle = '#ffff00';
+        ctx.fillRect(c.x, c.y, c.width, c.height);
+        ctx.shadowBlur = 0;
+      }
+    }
 
-            updateCamera: () => {
-                // Batasi rotasi X agar tidak terbalik total
-                if(game.rotX > 90) game.rotX = 90;
-                if(game.rotX < -90) game.rotX = -90;
-                
-                game.pivot.style.transform = `rotateX(${game.rotX}deg) rotateY(${game.rotY}deg)`;
-            },
+    function drawScorePopups() {
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 18px Courier New';
+      for (let i = scorePopups.length - 1; i >= 0; i--) {
+        const p = scorePopups[i];
+        ctx.globalAlpha = p.life / 45;
+        ctx.fillStyle = '#ffff00';
+        ctx.fillText(`+${p.points}`, p.x, p.y);
+        p.y += p.vy;
+        p.life--;
+        if (p.life <= 0) scorePopups.splice(i, 1);
+      }
+      ctx.globalAlpha = 1;
+    }
 
-            /**
-             * LOGIKA UTAMA ROTASI
-             * @param {string} axis - 'L','R','U','D','F','B'
-             * @param {number} dir - 1 (Clockwise), -1 (Counter-Clockwise)
-             * @param {boolean} animate - true untuk animasi, false untuk instan (shuffle)
-             */
-            rotateLayer: (axis, dir, animate) => {
-                game.isAnimating = true;
+    function drawParticles() {
+      for (let i = particles.length-1; i >= 0; i--) {
+        let p = particles[i];
+        ctx.globalAlpha = p.life / 28;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, 5, 5);
+        p.x += p.vx; p.y += p.vy; p.life--; p.vy += 0.15;
+        if (p.life <= 0) particles.splice(i,1);
+      }
+      ctx.globalAlpha = 1;
+    }
 
-                // Tentukan kriteria seleksi kubies berdasarkan axis
-                // Koordinat: x, y, z (nilai -1, 0, 1)
-                let selector = null; 
-                // Axis rotasi dalam ruang 3D CSS
-                let rotationAxis = ''; 
-                let rotationDeg = 90 * dir;
+    function drawStartScreen() {
+      // Notifikasi Style
+      ctx.fillStyle = 'rgba(10, 10, 40, 0.95)';
+      ctx.strokeStyle = '#00ffff';
+      ctx.lineWidth = 4;
+      ctx.fillRect(150, 80, 500, 240);
+      ctx.strokeRect(150, 80, 500, 240);
 
-                // Mapping notasi Rubik ke koordinat dan sumbu rotasi
-                // Catatan: Arah putaran harus konsisten dengan standar Rubik
-                switch(axis) {
-                    case 'R': selector = (c) => c.x === 1; rotationAxis = 'x'; rotationDeg = -90 * dir; break; // R standard
-                    case 'L': selector = (c) => c.x === -1; rotationAxis = 'x'; rotationDeg = 90 * dir; break; // L standard (kebalikan R)
-                    case 'U': selector = (c) => c.y === 1; rotationAxis = 'y'; rotationDeg = -90 * dir; break;
-                    case 'D': selector = (c) => c.y === -1; rotationAxis = 'y'; rotationDeg = 90 * dir; break;
-                    case 'F': selector = (c) => c.z === 1; rotationAxis = 'z'; rotationDeg = -90 * dir; break;
-                    case 'B': selector = (c) => c.z === -1; rotationAxis = 'z'; rotationDeg = 90 * dir; break;
-                }
+      ctx.shadowColor = '#ff00ff';
+      ctx.shadowBlur = 30;
 
-                // Ambil kubies yang terpengaruh
-                const activeCubies = game.cubies.filter(selector);
+      ctx.fillStyle = '#ff00ff';
+      ctx.font = 'bold 38px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText('CYBER NINJA RUNNER', canvas.width/2, 130);
 
-                // 1. Animasi Visual
-                if (animate) {
-                    // Kita tidak memutar DOM cubie secara permanen karena akan merusak sumbu lokal.
-                    // Kita gunakan "Visual Trick": Putar pivot parent semu? 
-                    // Tidak, karena kita pakai flat list di pivot.
-                    // Solusi MVP: Kita animasi transform mereka, lalu setelah selesai, 
-                    // kita reset transform dan SWAP warnanya/posisi datanya.
-                    
-                    activeCubies.forEach(c => {
-                        // Terapkan animasi rotasi sementara pada style
-                        // Kita perlu memutar relatif terhadap pusat dunia (0,0,0)
-                        // Tapi karena transform origin default center, dan posisi mereka sudah translateZ/X/Y,
-                        // rotasi standar akan memutar mereka mengelilingi poros sendiri.
-                        // TRIK: Kita ubah transform-origin menjadi (0,0,0) ?? Rumit di CSS dynamic.
-                        
-                        // ALTERNATIF YANG LEBIH MUDAH:
-                        // Jangan animasi putarannya. Langkah ini (MVP) fokus pada logika swapping data.
-                        // Visual animasi diputar menjadi "instan" atau kita skip animasi rotate 
-                        // dan fokus pada hasil akhir (snapping).
-                        // Jika user mau animasi, kita bisa putar elemen 'pivot'?? Tidak.
-                        
-                        // Mari kita buat animasi sederhana:
-                        // Kita update transisi, lalu update rotasi di transform string, 
-                        // lalu setelah timeout, kita rotasi balik (0) tapi update posisi.
-                    });
-                    
-                    // Untuk stabilitas MVP dalam satu file tanpa library 3D:
-                    // Kita akan membuat transisi instan untuk shuffle, dan sedikit delay untuk user input
-                    // agar terlihat ada respons, tapi tidak ada animasi rotasi slice yang mulus (smooth slicing)
-                    // karena itu membutuhkan hirarki DOM yang kompleks (pivot dinamis).
-                    // Kita akan update logika data & visual langsung.
-                }
+      ctx.shadowBlur = 15;
+      ctx.fillStyle = '#00ffff';
+      ctx.font = '22px Courier New';
+      ctx.fillText('HIGH SCORE', canvas.width/2, 180);
+      ctx.fillStyle = '#ffff00';
+      ctx.font = 'bold 32px Courier New';
+      ctx.fillText(highScore.toString().padStart(5, '0'), canvas.width/2, 215);
 
-                // 2. Rotasi Data (Logika Koordinat & Warna)
-                // Kita putar koordinat (x,y,z) dan kita putar warnanya.
-                
-                activeCubies.forEach(c => {
-                    // Putar Koordinat (Matriks Rotasi 90 derajat)
-                    let x = c.x, y = c.y, z = c.z;
-                    let nx = x, ny = y, nz = z;
-                    
-                    // Rotasi Sumbu
-                    if (rotationAxis === 'x') {
-                        // Rotasi X: y -> z, z -> -y (clockwise)
-                        // Arah tergantung dir
-                        if (rotationDeg > 0) { ny = -z; nz = y; }
-                        else { ny = z; nz = -y; }
-                    } else if (rotationAxis === 'y') {
-                        // Rotasi Y: z -> x, x -> -z
-                        if (rotationDeg > 0) { nx = z; nz = -x; }
-                        else { nx = -z; nz = x; }
-                    } else if (rotationAxis === 'z') {
-                        // Rotasi Z: x -> y, y -> -x
-                        if (rotationDeg > 0) { nx = -y; ny = x; }
-                        else { nx = y; ny = -x; }
-                    }
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '20px Courier New';
+      ctx.fillText('TEKAN SPACE ATAU TAP LAYAR', canvas.width/2, 270);
+      ctx.fillText('UNTUK MULAI BERLARI', canvas.width/2, 295);
 
-                    c.x = Math.round(nx);
-                    c.y = Math.round(ny);
-                    c.z = Math.round(nz);
+      ctx.shadowBlur = 0;
+    }
 
-                    // Putar Warna (Sticker Mapping)
-                    // Kita harus menukar properti warna di objek colors
-                    const cols = c.colors;
-                    let temp;
-                    
-                    if (rotationAxis === 'x') {
-                        // Rotasi X: U -> B -> D -> F -> U (Clockwise)
-                        // Atau tergantung arah putaran
-                        if (rotationDeg > 0) { // Clockwise relative to axis looking from right
-                            temp = cols.u; cols.u = cols.b; cols.b = cols.d; cols.d = cols.f; cols.f = temp;
-                        } else {
-                            temp = cols.u; cols.u = cols.f; cols.f = cols.d; cols.d = cols.b; cols.b = temp;
-                        }
-                    } else if (rotationAxis === 'y') {
-                        // Rotasi Y: F -> L -> B -> R -> F
-                        if (rotationDeg > 0) { // Clockwise relative to top
-                            temp = cols.f; cols.f = cols.l; cols.l = cols.b; cols.b = cols.r; cols.r = temp;
-                        } else {
-                            temp = cols.f; cols.f = cols.r; cols.r = cols.b; cols.b = cols.l; cols.l = temp;
-                        }
-                    } else if (rotationAxis === 'z') {
-                        // Rotasi Z: U -> R -> D -> L -> U
-                        if (rotationDeg > 0) {
-                            temp = cols.u; cols.u = cols.l; cols.l = cols.d; cols.d = cols.r; cols.r = temp;
-                        } else {
-                            temp = cols.u; cols.u = cols.r; cols.r = cols.d; cols.d = cols.l; cols.l = temp;
-                        }
-                    }
-                });
+    function update() {
+      if (!gameRunning) return;
+      frame++;
+      distance += speed * 0.3;
+      score += 0.6;
+      updateUI();
 
-                // 3. Render Ulang Posisi & Warna
-                // Jika animasi aktif, kita bisa beri delay kecil
-                if(animate) {
-                     // Efek visual sederhana: flash opacity?
-                     // Untuk MVP, update langsung lebih responsif daripada animasi yang patah-patah.
-                }
-                game.renderCubePositions();
+      if (Math.floor(score) % 500 === 0 && speed < 13) speed += 0.25;
 
-                // Update Game State
-                if (animate && game.isPlaying) {
-                    game.moves++;
-                    game.moveDisplay.innerText = game.moves;
-                }
-                
-                game.isAnimating = false;
-                game.checkWin();
-            },
+      if (isJumping) {
+        velocity += gravity;
+        player.y += velocity;
+        if (player.y >= player.baseY) {
+          player.y = player.baseY;
+          isJumping = false;
+          velocity = 0;
+        }
+      }
 
-            checkWin: () => {
-                if (!game.isPlaying) return;
+      if (isSliding) {
+        player.height = 35;
+        player.y = player.baseY + 30;
+      } else if (!isJumping) {
+        player.height = 65;
+        player.y = player.baseY;
+      }
 
-                // Cek kemenangan: Setiap sisi (f,b,r,l,u,d) harus memiliki warna yang sama
-                // untuk semua 9 kubies yang menghadap sisi itu.
-                
-                const faces = ['f', 'b', 'r', 'l', 'u', 'd'];
-                let isWin = true;
+      bgX1 -= speed * 1.3; bgX2 -= speed * 0.8; bgX3 -= speed * 0.4;
+      if (bgX1 < -canvas.width) bgX1 = 0;
+      if (bgX2 < -canvas.width) bgX2 = 0;
+      if (bgX3 < -canvas.width) bgX3 = 0;
 
-                for (let face of faces) {
-                    // Ambil warna kubie pertama untuk referensi
-                    // Contoh: cek sisi Front (z=1)
-                    // Cari 9 kubie di z=1
-                    // Cek apakah attribute .colors['f'] mereka sama semua.
-                    
-                    let targetColor = null;
-                    
-                    // Filter kubies yang ada di permukaan wajah ini
-                    let surfaceCubies = [];
-                    if(face === 'f') surfaceCubies = game.cubies.filter(c => c.z === 1);
-                    if(face === 'b') surfaceCubies = game.cubies.filter(c => c.z === -1);
-                    if(face === 'r') surfaceCubies = game.cubies.filter(c => c.x === 1);
-                    if(face === 'l') surfaceCubies = game.cubies.filter(c => c.x === -1);
-                    if(face === 'u') surfaceCubies = game.cubies.filter(c => c.y === 1);
-                    if(face === 'd') surfaceCubies = game.cubies.filter(c => c.y === -1);
+      if (frame % 42 === 0) createObstacle();
+      if (frame % 48 === 0) createCollectible();
 
-                    if(surfaceCubies.length > 0) {
-                        targetColor = surfaceCubies[0].colors[face];
-                        for(let c of surfaceCubies) {
-                            if(c.colors[face] !== targetColor) {
-                                isWin = false;
-                                break;
-                            }
-                        }
-                    }
-                    if(!isWin) break;
-                }
+      for (let i = obstacles.length-1; i >= 0; i--) {
+        const obs = obstacles[i];
+        obs.x -= speed;
+        if (!obs.passed && obs.x + obs.width < player.x) {
+          obs.passed = true;
+          playBeep(1200, 60, 'square', 0.25);
+        }
+        if (obs.x < -100) obstacles.splice(i,1);
+      }
 
-                if (isWin) {
-                    game.isPlaying = false;
-                    game.stopTimer();
-                    document.getElementById('final-time').innerText = game.timerDisplay.innerText;
-                    document.getElementById('final-moves').innerText = game.moves;
-                    setTimeout(() => {
-                        game.modal.classList.add('active');
-                    }, 300);
-                }
-            },
+      for (let i = collectibles.length-1; i >= 0; i--) {
+        let c = collectibles[i];
+        c.x -= speed;
+        if (c.x < -50) { collectibles.splice(i,1); continue; }
 
-            resetGame: () => {
-                game.modal.classList.remove('active');
-                game.init();
-                game.shuffle();
-            }
-        };
+        if (player.x + player.width > c.x && player.x < c.x + c.width &&
+            player.y + player.height > c.y && player.y < c.y + c.height) {
+          const points = 60 + Math.floor(Math.random() * 40);
+          score += points;
+          createScorePopup(c.x + 10, c.y - 10, points);
+          playBeep(1600, 120, 'sine', 0.4);
+          for (let j = 0; j < 12; j++) createParticle(c.x + 10, c.y + 10);
+          collectibles.splice(i,1);
+        }
+      }
 
-        // Init App
-        // Tidak auto start, tunggu user klik tombol di home
-    </script>
+      for (let obs of obstacles) {
+        if (player.x + player.width > obs.x && player.x < obs.x + obs.width &&
+            player.y + player.height > obs.y && player.y < obs.y + obs.height) {
+          playBeep(400, 300, 'sawtooth', 0.5);
+          gameOver();
+          return;
+        }
+      }
+
+      if (frame % 5 === 0 && !isJumping) createParticle(player.x + 15, player.y + player.height - 8);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
+      drawObstacles();
+      drawCollectibles();
+      drawNinja();
+      drawParticles();
+      drawScorePopups();
+    }
+
+    function gameLoop() {
+      if (!gameRunning) {
+        drawBackground();
+        drawNinja();
+        drawStartScreen();
+      } else {
+        update();
+        draw();
+      }
+      requestAnimationFrame(gameLoop);
+    }
+
+    function startGame() {
+      gameRunning = true;
+      score = 0; distance = 0; speed = 6;
+      obstacles = []; collectibles = []; particles = []; scorePopups = [];
+      player.y = player.baseY;
+      isJumping = isSliding = false;
+      updateUI();
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      const finalScore = Math.floor(score);
+      if (finalScore > highScore) {
+        highScore = finalScore;
+        localStorage.setItem('ninjaHighScore', highScore);
+      }
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.92)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.textAlign = 'center';
+      ctx.shadowColor = '#ff00ff';
+      ctx.shadowBlur = 40;
+
+      ctx.fillStyle = '#ff00ff';
+      ctx.font = 'bold 38px Courier New';
+      ctx.fillText('TOTAL SCORE', canvas.width/2, 130);
+
+      ctx.shadowBlur = 60;
+      ctx.fillStyle = '#ffff00';
+      ctx.font = 'bold 72px Courier New';
+      ctx.fillText(finalScore.toString().padStart(5, '0'), canvas.width/2, 210);
+
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = '#00ffff';
+      ctx.font = 'bold 26px Courier New';
+      ctx.fillText(`DISTANCE: ${Math.floor(distance)}m`, canvas.width/2, 260);
+
+      ctx.font = '22px Courier New';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(`HIGH SCORE: ${highScore}`, canvas.width/2, 295);
+
+      ctx.fillStyle = '#ff00ff';
+      ctx.font = 'bold 20px Courier New';
+      ctx.fillText('TEKAN SPACE UNTUK MAIN LAGI', canvas.width/2, 340);
+      ctx.shadowBlur = 0;
+    }
+
+    // Controls
+    document.addEventListener('keydown', e => {
+      if (e.key === ' ' && !gameRunning) startGame();
+      if (!gameRunning) return;
+
+      if ((e.key === ' ' || e.key === 'ArrowUp') && !isJumping) {
+        velocity = -18;
+        isJumping = true;
+        playBeep(900, 50);
+      }
+      if (e.key === 'ArrowDown') isSliding = true;
+    });
+
+    document.addEventListener('keyup', e => {
+      if (e.key === 'ArrowDown') isSliding = false;
+    });
+
+    canvas.addEventListener('touchstart', e => {
+      if (!gameRunning) { startGame(); return; }
+      if (e.touches[0].clientX < canvas.width / 2) {
+        if (!isJumping) { 
+          velocity = -18; 
+          isJumping = true;
+          playBeep(900, 50);
+        }
+      } else {
+        isSliding = true;
+      }
+    });
+    canvas.addEventListener('touchend', () => isSliding = false);
+
+    gameLoop();
+  </script>
 </body>
 </html>
