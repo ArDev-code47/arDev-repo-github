@@ -1,147 +1,1212 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="dark scroll-smooth">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ArDev - Portfolio</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArDev — Portfolio</title>
+  <meta name="description" content="Portfolio of ArDev — RPL Student, Game & Web Developer." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            neon: '#00ff88',
+            cyan: '#00e5ff',
+            purple: '#a855f7',
+            dark: {
+              900: '#0a0a0f',
+              800: '#0f0f1a',
+              700: '#161625',
+              600: '#1e1e32',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    body { 
-      font-family: 'Segoe UI', sans-serif; 
-      background-color: #0a0a0f;
+    * { cursor: none; }
+    ::selection { background: rgba(0,255,136,0.3); color: #00ff88; }
+
+    /* Custom Cursor */
+    .cursor-dot {
+      width: 8px; height: 8px;
+      background: #00ff88;
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 99999;
+      transition: transform 0.1s ease;
+      box-shadow: 0 0 10px #00ff88, 0 0 20px rgba(0,255,136,0.5);
     }
-    .hero-bg { 
-      background: linear-gradient(135deg, #1e3a8a 0%, #6b21a8 100%); 
+    .cursor-ring {
+      width: 40px; height: 40px;
+      border: 2px solid rgba(0,255,136,0.5);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 99998;
+      transition: all 0.15s ease-out;
     }
-    .fade-in { 
-      opacity: 0; 
-      transform: translateY(30px); 
-      transition: all 0.8s ease-out; 
+    .cursor-ring.hover {
+      width: 60px; height: 60px;
+      border-color: #00ff88;
+      background: rgba(0,255,136,0.1);
     }
-    .fade-in.visible { 
-      opacity: 1; 
-      transform: translateY(0); 
+
+    /* Scroll Progress */
+    #scroll-progress {
+      position: fixed; top: 0; left: 0;
+      height: 3px; background: linear-gradient(90deg, #00ff88, #00e5ff, #a855f7);
+      z-index: 9999; transition: width 0.1s linear;
+      box-shadow: 0 0 10px rgba(0,255,136,0.5);
     }
-    .hero-text { 
-      animation: slideUp 1s ease-out forwards; 
+
+    /* Glow Effects */
+    .glow-green { text-shadow: 0 0 10px rgba(0,255,136,0.5), 0 0 40px rgba(0,255,136,0.2); }
+    .glow-box { box-shadow: 0 0 15px rgba(0,255,136,0.15), inset 0 0 15px rgba(0,255,136,0.05); }
+    .glow-box-strong { box-shadow: 0 0 25px rgba(0,255,136,0.3), inset 0 0 25px rgba(0,255,136,0.1); }
+    .glow-border { border: 1px solid rgba(0,255,136,0.2); }
+    .glow-border:hover { border-color: rgba(0,255,136,0.5); box-shadow: 0 0 20px rgba(0,255,136,0.2); }
+
+    /* Glass */
+    .glass {
+      background: rgba(15,15,26,0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.06);
     }
-    @keyframes slideUp { 
-      from { opacity: 0; transform: translateY(50px); } 
-      to { opacity: 1; transform: translateY(0); } 
+    .glass-light {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0,0,0,0.08);
     }
-    .card-hover { 
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+
+    /* Typing */
+    .typing-cursor::after {
+      content: '|';
+      animation: blink 1s step-end infinite;
+      color: #00ff88;
+      font-weight: 300;
     }
-    .card-hover:hover { 
-      transform: translateY(-10px) scale(1.03); 
-      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.4); 
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Particle Canvas */
+    #particle-canvas {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 0;
     }
+
+    /* Ring Animation */
+    .profile-ring {
+      background: conic-gradient(#00ff88, #00e5ff, #a855f7, #00ff88);
+      animation: ring-spin 3s linear infinite;
+      padding: 4px; border-radius: 50%;
+    }
+    @keyframes ring-spin { to { transform: rotate(360deg); } }
+
+    /* Skill Bar Animation */
+    .skill-fill {
+      width: 0%;
+      transition: width 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .skill-fill.animated { width: var(--skill-level); }
+
+    /* Timeline */
+    .timeline-line {
+      position: absolute; left: 19px; top: 40px; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, #00ff88, transparent);
+    }
+    .timeline-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #00ff88;
+      box-shadow: 0 0 10px rgba(0,255,136,0.5);
+      flex-shrink: 0;
+    }
+
+    /* Card Hover */
+    .project-card {
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .project-card:hover {
+      transform: translateY(-8px);
+    }
+    .project-card .card-overlay {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .project-card:hover .card-overlay { opacity: 1; }
+
+    /* Modal */
+    .modal-backdrop {
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .modal-backdrop.active .modal-content {
+      transform: scale(1) translateY(0);
+    }
+
+    /* Terminal */
+    .terminal-window {
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 30px rgba(0,255,136,0.1);
+    }
+
+    /* Filter Button */
+    .filter-btn {
+      transition: all 0.2s ease;
+    }
+    .filter-btn.active {
+      background: #00ff88;
+      color: #0a0a0f;
+      box-shadow: 0 0 15px rgba(0,255,136,0.4);
+    }
+
+    /* Light Mode Overrides */
+    .light .glow-green { text-shadow: none; }
+    .light .glow-box { box-shadow: 0 2px 15px rgba(0,0,0,0.08); }
+    .light .glow-box-strong { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+    .light .glow-border { border-color: rgba(0,0,0,0.1); }
+    .light .glow-border:hover { border-color: #00cc6e; box-shadow: 0 4px 15px rgba(0,255,136,0.15); }
+    .light .profile-ring { background: conic-gradient(#00cc6e, #00b8d4, #9333ea, #00cc6e); }
+    .light .timeline-line { background: linear-gradient(to bottom, #00cc6e, transparent); }
+    .light .timeline-dot { background: #00cc6e; box-shadow: 0 0 8px rgba(0,204,110,0.3); }
+    .light .filter-btn.active { background: #00cc6e; box-shadow: 0 2px 10px rgba(0,204,110,0.3); }
+
+    /* Scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Toast */
+    .toast {
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .toast.show { transform: translateX(0); }
+
+    /* Back to top */
+    #back-to-top {
+      opacity: 0; pointer-events: none;
+      transition: all 0.3s ease;
+    }
+    #back-to-top.visible { opacity: 1; pointer-events: auto; }
+
+    /* Mobile cursor fix */
+    @media (max-width: 768px) {
+      * { cursor: auto; }
+      .cursor-dot, .cursor-ring { display: none; }
+    }
+
+    /* Smooth scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #1e1e32; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00ff88; }
+    .light ::-webkit-scrollbar-track { background: #f5f5f5; }
+    .light ::-webkit-scrollbar-thumb { background: #d4d4d4; }
+    .light ::-webkit-scrollbar-thumb:hover { background: #00cc6e; }
   </style>
 </head>
-<body class="bg-gray-950 text-gray-200">
+<body class="dark bg-dark-900 text-white font-sans antialiased overflow-x-hidden transition-colors duration-500">
 
-  <!-- Hero Section -->
-  <section class="min-h-screen hero-bg text-white flex items-center relative overflow-hidden">
-    <div class="absolute text-8xl top-20 left-10 opacity-10 animate-pulse">💻</div>
-    <div class="absolute text-8xl bottom-32 right-16 opacity-10 animate-pulse delay-700">🚀</div>
-    <div class="absolute text-7xl top-1/2 left-1/3 opacity-10 animate-pulse delay-1000">⚡</div>
+  <!-- Custom Cursor -->
+  <div class="cursor-dot" id="cursor-dot"></div>
+  <div class="cursor-ring" id="cursor-ring"></div>
 
-    <div class="max-w-4xl mx-auto text-center px-6 relative z-10">
-      <h1 class="text-5xl md:text-6xl font-bold mb-4 hero-text">Halo, Saya <span class="text-yellow-300">ArDev</span></h1>
-      <p class="text-2xl mb-6 fade-in">Mahasiswa Rekayasa Perangkat Lunak</p>
-      <p class="text-xl mb-10 max-w-lg mx-auto fade-in">Ini adalah website portofolio pribadi saya</p>
-      
-      <a href="#games" 
-         class="inline-block bg-white text-gray-900 font-semibold px-10 py-5 rounded-full text-lg hover:bg-yellow-300 hover:text-black transition-all duration-300">
-        Lihat Game Saya ↓
+  <!-- Scroll Progress -->
+  <div id="scroll-progress"></div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-24 right-4 z-[9998] flex flex-col gap-3"></div>
+
+  <!-- ==================== NAVBAR ==================== -->
+  <nav id="navbar" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-4xl">
+    <div class="glass rounded-2xl px-5 py-3 flex items-center justify-between">
+      <a href="#hero" class="flex items-center gap-2 group">
+        <div class="w-8 h-8 rounded-lg bg-neon/20 flex items-center justify-center group-hover:bg-neon/30 transition-colors">
+          <span class="text-neon font-mono font-bold text-sm">&lt;/&gt;</span>
+        </div>
+        <span class="font-mono font-semibold text-sm tracking-tight dark:text-white text-gray-900">ArDev</span>
       </a>
+      <div class="hidden md:flex items-center gap-1">
+        <a href="#about" class="nav-link px-3 py-2 text-sm font-medium dark:text-white/70 dark:hover:text-neon text-gray-500 hover:text-neon transition-colors rounded-lg dark:hover:bg-white/5 hover:bg-gray-100">About</a>
+        <a href="#projects" class="nav-link px-3 py-2 text-sm font-medium dark:text-white/70 dark:hover:text-neon text-gray-500 hover:text-neon transition-colors rounded-lg dark:hover:bg-white/5 hover:bg-gray-100">Projects</a>
+        <a href="#games" class="nav-link px-3 py-2 text-sm font-medium dark:text-white/70 dark:hover:text-neon text-gray-500 hover:text-neon transition-colors rounded-lg dark:hover:bg-white/5 hover:bg-gray-100">Games</a>
+        <a href="#contact" class="nav-link px-3 py-2 text-sm font-medium dark:text-white/70 dark:hover:text-neon text-gray-500 hover:text-neon transition-colors rounded-lg dark:hover:bg-white/5 hover:bg-gray-100">Contact</a>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center dark:hover:bg-white/10 hover:bg-gray-200 transition-colors" aria-label="Toggle theme">
+          <i data-lucide="sun" class="w-4 h-4 dark:block hidden dark:text-white/70"></i>
+          <i data-lucide="moon" class="w-4 h-4 dark:hidden block text-gray-600"></i>
+        </button>
+        <button id="mobile-menu-btn" class="md:hidden w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center dark:hover:bg-white/10 hover:bg-gray-200 transition-colors" aria-label="Menu">
+          <i data-lucide="menu" class="w-4 h-4 dark:text-white/70 text-gray-600"></i>
+        </button>
+      </div>
     </div>
-  </section>
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="md:hidden glass rounded-2xl mt-2 p-4 hidden">
+      <div class="flex flex-col gap-1">
+        <a href="#about" class="mobile-nav-link px-4 py-3 text-sm font-medium dark:text-white/70 dark:hover:text-neon text-gray-500 hover:text-neon transition-colors rounded-xl dark:hover:bg-white/5 hover:bg-gray-100">About</a>
+        <a href="#projects" class="mobile-nav-link px-4 py-3 text-sm font-medium dark:text-white/70 dark:hover:text-neon text-gray-500 hover:text-neon transition-colors rounded-xl dark:hover:bg-white/5 hover:bg-gray-100">Projects</a>
+        <a href="#games" class="mobile-nav-link px-4 py-3 text-sm font-medium dark:text-white/70 dark:hover:text-neon text-gray-500 hover:text-neon transition-colors rounded-xl dark:hover:bg-white/5 hover:bg-gray-100">Games</a>
+        <a href="#contact" class="mobile-nav-link px-4 py-3 text-sm font-medium dark:text-white/70 dark:hover:text-neon text-gray-500 hover:text-neon transition-colors rounded-xl dark:hover:bg-white/5 hover:bg-gray-100">Contact</a>
+      </div>
+    </div>
+  </nav>
 
-  <!-- About -->
-  <section class="py-20 bg-gray-900">
-    <div class="max-w-4xl mx-auto px-6">
-      <h2 class="text-3xl font-bold text-center mb-10 text-white fade-in">Tentang Saya</h2>
-      <p class="text-lg text-gray-300 leading-relaxed text-center max-w-2xl mx-auto fade-in">
-        Mahasiswa baru RPL yang suka membuat game. 
-        Game terbaru saya adalah <strong>Code Snake — Bug Hunter</strong>, 
-        game Snake dengan tema programmer.
+  <!-- ==================== HERO ==================== -->
+  <section id="hero" class="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
+    <canvas id="particle-canvas"></canvas>
+    <div class="relative z-10 text-center max-w-4xl mx-auto">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass glow-border mb-8">
+        <span class="w-2 h-2 rounded-full bg-neon animate-pulse"></span>
+        <span class="font-mono text-xs dark:text-white/60 text-gray-500">Available for opportunities</span>
+      </div>
+      <h1 class="font-mono font-bold text-4xl md:text-6xl lg:text-7xl tracking-tight leading-[1.1] mb-6">
+        <span class="dark:text-white text-gray-900">Halo, saya</span><br>
+        <span class="glow-green text-neon">ArDev</span>
+      </h1>
+      <div class="h-8 md:h-10 mb-8">
+        <p class="font-mono text-lg md:text-xl dark:text-white/60 text-gray-500 typing-cursor" id="typing-text"></p>
+      </div>
+      <p class="text-base md:text-lg dark:text-white/50 text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+        Mahasiswa RPL yang passionate dalam membangun <span class="dark:text-white text-gray-700">web apps</span> & <span class="dark:text-white text-gray-700">games</span>. Mengubah ide menjadi kode yang berjalan.
       </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#projects" class="group inline-flex items-center gap-2 px-8 py-4 bg-neon text-dark-900 font-mono font-semibold text-sm rounded-xl hover:bg-neon/90 transition-all glow-box-strong">
+          Explore My Works
+          <i data-lucide="arrow-down" class="w-4 h-4 group-hover:translate-y-0.5 transition-transform"></i>
+        </a>
+        <a href="#contact" class="inline-flex items-center gap-2 px-8 py-4 glass glow-border rounded-xl font-mono font-medium text-sm dark:text-white/80 text-gray-700 dark:hover:text-neon hover:text-neon transition-all">
+          <i data-lucide="mail" class="w-4 h-4"></i>
+          Hubungi Saya
+        </a>
+      </div>
+      <!-- Tech Stack Pills -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-12">
+        <span class="px-3 py-1.5 rounded-lg dark:bg-white/5 bg-gray-100 font-mono text-xs dark:text-white/40 text-gray-400">HTML5</span>
+        <span class="px-3 py-1.5 rounded-lg dark:bg-white/5 bg-gray-100 font-mono text-xs dark:text-white/40 text-gray-400">CSS3</span>
+        <span class="px-3 py-1.5 rounded-lg dark:bg-white/5 bg-gray-100 font-mono text-xs dark:text-white/40 text-gray-400">JavaScript</span>
+        <span class="px-3 py-1.5 rounded-lg dark:bg-white/5 bg-gray-100 font-mono text-xs dark:text-white/40 text-gray-400">PHP</span>
+        <span class="px-3 py-1.5 rounded-lg dark:bg-white/5 bg-gray-100 font-mono text-xs dark:text-white/40 text-gray-400">Laravel</span>
+        <span class="px-3 py-1.5 rounded-lg dark:bg-white/5 bg-gray-100 font-mono text-xs dark:text-white/40 text-gray-400">Python</span>
+        <span class="px-3 py-1.5 rounded-lg dark:bg-white/5 bg-gray-100 font-mono text-xs dark:text-white/40 text-gray-400">Git</span>
+      </div>
+    </div>
+    <!-- Scroll Indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+      <span class="font-mono text-[10px] dark:text-white/30 text-gray-300 tracking-widest uppercase">Scroll</span>
+      <i data-lucide="chevron-down" class="w-4 h-4 dark:text-white/30 text-gray-300"></i>
     </div>
   </section>
 
-  <!-- Skills -->
-  <section class="py-20 bg-gray-900">
-    <div class="max-w-4xl mx-auto px-6">
-      <h2 class="text-3xl font-bold text-center mb-12 text-white fade-in">Skill yang Sedang Saya Pelajari</h2>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-        <div class="bg-gray-800 p-8 rounded-2xl shadow card-hover fade-in text-gray-200">HTML5</div>
-        <div class="bg-gray-800 p-8 rounded-2xl shadow card-hover fade-in text-gray-200">CSS3</div>
-        <div class="bg-gray-800 p-8 rounded-2xl shadow card-hover fade-in text-gray-200">JavaScript</div>
-        <div class="bg-gray-800 p-8 rounded-2xl shadow card-hover fade-in text-gray-200">Canvas API</div>
+  <!-- ==================== ABOUT ==================== -->
+  <section id="about" class="relative py-24 md:py-32 px-6">
+    <div class="max-w-6xl mx-auto">
+      <!-- Section Header -->
+      <div class="text-center mb-16 reveal">
+        <span class="font-mono text-xs text-neon tracking-widest uppercase">01 — About</span>
+        <h2 class="font-mono font-bold text-3xl md:text-4xl tracking-tight mt-3 dark:text-white text-gray-900">Tentang Saya</h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-16 items-start">
+        <!-- Left: Photo + Bio -->
+        <div class="reveal">
+          <div class="flex justify-center mb-8">
+            <div class="profile-ring">
+              <div class="w-44 h-44 rounded-full overflow-hidden dark:bg-dark-700 bg-gray-200">
+                <img src="https://picsum.photos/seed/ardev-profile/400/400.jpg" alt="ArDev Profile" class="w-full h-full object-cover" />
+              </div>
+            </div>
+          </div>
+          <p class="dark:text-white/70 text-gray-600 leading-relaxed text-center md:text-left mb-6">
+            Saya adalah mahasiswa <span class="dark:text-white text-gray-900 font-medium">Rekayasa Perangkat Lunak</span> yang memiliki ketertarikan mendalam di dunia pengembangan web dan game. Saya percaya bahwa setiap baris kode yang ditulis harus memiliki tujuan.
+          </p>
+          <p class="dark:text-white/50 text-gray-500 leading-relaxed text-center md:text-left">
+            Selain coding, saya juga menikmati eksplorasi teknologi baru, membaca dokumentasi (serius 😅), dan bermain game untuk mencari inspirasi mekanik yang menarik.
+          </p>
+        </div>
+        <!-- Right: Timeline -->
+        <div class="reveal" style="transition-delay: 0.2s;">
+          <h3 class="font-mono font-semibold text-sm text-neon mb-6 tracking-wide">// EXPERIENCE & EDUCATION</h3>
+          <div class="relative pl-10">
+            <div class="timeline-line"></div>
+            <!-- Item 1 -->
+            <div class="relative flex gap-4 mb-8">
+              <div class="timeline-dot mt-1.5"></div>
+              <div>
+                <span class="font-mono text-xs dark:text-white/40 text-gray-400">2023 — Sekarang</span>
+                <h4 class="font-mono font-semibold text-sm dark:text-white text-gray-900 mt-1">Mahasiswa RPL</h4>
+                <p class="dark:text-white/50 text-gray-500 text-sm mt-1">SMK / Universitas — Fokus pada Web Development & Game Programming</p>
+              </div>
+            </div>
+            <!-- Item 2 -->
+            <div class="relative flex gap-4 mb-8">
+              <div class="timeline-dot mt-1.5"></div>
+              <div>
+                <span class="font-mono text-xs dark:text-white/40 text-gray-400">2024</span>
+                <h4 class="font-mono font-semibold text-sm dark:text-white text-gray-900 mt-1">Freelance Web Developer</h4>
+                <p class="dark:text-white/50 text-gray-500 text-sm mt-1">Membangun website landing page & sistem informasi untuk klien lokal</p>
+              </div>
+            </div>
+            <!-- Item 3 -->
+            <div class="relative flex gap-4 mb-8">
+              <div class="timeline-dot mt-1.5"></div>
+              <div>
+                <span class="font-mono text-xs dark:text-white/40 text-gray-400">2024</span>
+                <h4 class="font-mono font-semibold text-sm dark:text-white text-gray-900 mt-1">Game Developer (Indie)</h4>
+                <p class="dark:text-white/50 text-gray-500 text-sm mt-1">Mengembangkan game berbasis Canvas & JavaScript untuk portofolio</p>
+              </div>
+            </div>
+            <!-- Item 4 -->
+            <div class="relative flex gap-4">
+              <div class="timeline-dot mt-1.5"></div>
+              <div>
+                <span class="font-mono text-xs dark:text-white/40 text-gray-400">2025</span>
+                <h4 class="font-mono font-semibold text-sm dark:text-white text-gray-900 mt-1">Open Source Contributor</h4>
+                <p class="dark:text-white/50 text-gray-500 text-sm mt-1">Aktif berkontribusi di GitHub dan belajar dari komunitas developer</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skills -->
+      <div class="mt-20 reveal">
+        <h3 class="font-mono font-semibold text-sm text-neon mb-8 tracking-wide text-center">// SKILL SET</h3>
+        <div class="grid md:grid-cols-2 gap-x-16 gap-y-5 max-w-4xl mx-auto">
+          <div class="skill-item">
+            <div class="flex justify-between mb-2">
+              <span class="font-mono text-sm dark:text-white/80 text-gray-700">HTML / CSS</span>
+              <span class="font-mono text-xs text-neon">90%</span>
+            </div>
+            <div class="h-2 rounded-full dark:bg-white/10 bg-gray-200 overflow-hidden">
+              <div class="skill-fill h-full rounded-full bg-gradient-to-r from-neon to-cyan" style="--skill-level: 90%"></div>
+            </div>
+          </div>
+          <div class="skill-item">
+            <div class="flex justify-between mb-2">
+              <span class="font-mono text-sm dark:text-white/80 text-gray-700">JavaScript</span>
+              <span class="font-mono text-xs text-neon">80%</span>
+            </div>
+            <div class="h-2 rounded-full dark:bg-white/10 bg-gray-200 overflow-hidden">
+              <div class="skill-fill h-full rounded-full bg-gradient-to-r from-neon to-cyan" style="--skill-level: 80%"></div>
+            </div>
+          </div>
+          <div class="skill-item">
+            <div class="flex justify-between mb-2">
+              <span class="font-mono text-sm dark:text-white/80 text-gray-700">PHP / Laravel</span>
+              <span class="font-mono text-xs text-neon">75%</span>
+            </div>
+            <div class="h-2 rounded-full dark:bg-white/10 bg-gray-200 overflow-hidden">
+              <div class="skill-fill h-full rounded-full bg-gradient-to-r from-neon to-purple" style="--skill-level: 75%"></div>
+            </div>
+          </div>
+          <div class="skill-item">
+            <div class="flex justify-between mb-2">
+              <span class="font-mono text-sm dark:text-white/80 text-gray-700">Python</span>
+              <span class="font-mono text-xs text-neon">65%</span>
+            </div>
+            <div class="h-2 rounded-full dark:bg-white/10 bg-gray-200 overflow-hidden">
+              <div class="skill-fill h-full rounded-full bg-gradient-to-r from-cyan to-purple" style="--skill-level: 65%"></div>
+            </div>
+          </div>
+          <div class="skill-item">
+            <div class="flex justify-between mb-2">
+              <span class="font-mono text-sm dark:text-white/80 text-gray-700">Game Dev (Canvas)</span>
+              <span class="font-mono text-xs text-neon">70%</span>
+            </div>
+            <div class="h-2 rounded-full dark:bg-white/10 bg-gray-200 overflow-hidden">
+              <div class="skill-fill h-full rounded-full bg-gradient-to-r from-purple to-neon" style="--skill-level: 70%"></div>
+            </div>
+          </div>
+          <div class="skill-item">
+            <div class="flex justify-between mb-2">
+              <span class="font-mono text-sm dark:text-white/80 text-gray-700">Git & GitHub</span>
+              <span class="font-mono text-xs text-neon">75%</span>
+            </div>
+            <div class="h-2 rounded-full dark:bg-white/10 bg-gray-200 overflow-hidden">
+              <div class="skill-fill h-full rounded-full bg-gradient-to-r from-neon to-cyan" style="--skill-level: 75%"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Games Section -->
-  <section id="games" class="py-20 bg-gray-900">
-    <div class="max-w-5xl mx-auto px-6">
-      <h2 class="text-3xl font-bold text-center mb-4 text-white fade-in">Game Saya</h2>
-      <p class="text-center text-gray-400 mb-12 fade-in">Code Snake — Bug Hunter (Versi Programmer)</p>
-      
-      <div class="card-hover bg-gray-800 rounded-3xl overflow-hidden shadow max-w-2xl mx-auto">
-        <div class="p-8">
-          <h3 class="font-bold text-2xl mb-3 text-white">Code Snake — Bug Hunter</h3>
-          <p class="text-gray-400 mb-8">Game Snake modern dengan tema programmer. Makan kode, minum kopi, hindari bug, dan tingkatkan skor Anda!</p>
-          
-          <div class="text-center">
-            <a href="./game/index.html" 
-               target="_blank"
-               class="inline-block bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-semibold px-14 py-6 rounded-2xl text-xl transition-all shadow-lg">
-              ▶️ Mainkan Code Snake
+  <!-- ==================== PROJECTS ==================== -->
+  <section id="projects" class="relative py-24 md:py-32 px-6 dark:bg-dark-800/50 bg-gray-50/50 transition-colors">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12 reveal">
+        <span class="font-mono text-xs text-neon tracking-widest uppercase">02 — Projects</span>
+        <h2 class="font-mono font-bold text-3xl md:text-4xl tracking-tight mt-3 dark:text-white text-gray-900">Karya Saya</h2>
+        <p class="dark:text-white/50 text-gray-500 mt-3 text-sm max-w-lg mx-auto">Kumpulan proyek yang telah saya kerjakan, mulai dari web application hingga tools kecil.</p>
+      </div>
+      <!-- Filter -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mb-10 reveal">
+        <button class="filter-btn active px-4 py-2 rounded-xl font-mono text-xs font-medium dark:bg-white/5 bg-gray-100 dark:text-white/60 text-gray-500 dark:hover:text-white hover:text-gray-900 transition-all" data-filter="all">All</button>
+        <button class="filter-btn px-4 py-2 rounded-xl font-mono text-xs font-medium dark:bg-white/5 bg-gray-100 dark:text-white/60 text-gray-500 dark:hover:text-white hover:text-gray-900 transition-all" data-filter="web">Web</button>
+        <button class="filter-btn px-4 py-2 rounded-xl font-mono text-xs font-medium dark:bg-white/5 bg-gray-100 dark:text-white/60 text-gray-500 dark:hover:text-white hover:text-gray-900 transition-all" data-filter="tool">Tools</button>
+        <button class="filter-btn px-4 py-2 rounded-xl font-mono text-xs font-medium dark:bg-white/5 bg-gray-100 dark:text-white/60 text-gray-500 dark:hover:text-white hover:text-gray-900 transition-all" data-filter="api">API</button>
+      </div>
+      <!-- Project Grid -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="project-grid">
+        <!-- Project 1 -->
+        <div class="project-card glass glow-border rounded-2xl overflow-hidden group reveal" data-category="web">
+          <div class="relative h-48 overflow-hidden">
+            <img src="https://picsum.photos/seed/proj-ecommerce/600/400.jpg" alt="E-Commerce" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            <div class="card-overlay absolute inset-0 bg-gradient-to-t from-dark-900/90 to-transparent flex items-end p-5">
+              <button onclick="openModal('ecommerce')" class="flex items-center gap-2 px-4 py-2 bg-neon/20 border border-neon/30 rounded-lg font-mono text-xs text-neon hover:bg-neon/30 transition-colors">
+                <i data-lucide="eye" class="w-3 h-3"></i> Detail
+              </button>
+            </div>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-2 py-0.5 rounded-md bg-neon/10 font-mono text-[10px] text-neon">Web</span>
+            </div>
+            <h3 class="font-mono font-semibold text-sm dark:text-white text-gray-900">E-Commerce Platform</h3>
+            <p class="dark:text-white/40 text-gray-500 text-xs mt-1.5 leading-relaxed">Full-stack e-commerce dengan Laravel, fitur cart, payment, dan admin dashboard.</p>
+          </div>
+        </div>
+        <!-- Project 2 -->
+        <div class="project-card glass glow-border rounded-2xl overflow-hidden group reveal" data-category="web" style="transition-delay:0.1s">
+          <div class="relative h-48 overflow-hidden">
+            <img src="https://picsum.photos/seed/proj-blog/600/400.jpg" alt="Blog CMS" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            <div class="card-overlay absolute inset-0 bg-gradient-to-t from-dark-900/90 to-transparent flex items-end p-5">
+              <button onclick="openModal('blog')" class="flex items-center gap-2 px-4 py-2 bg-neon/20 border border-neon/30 rounded-lg font-mono text-xs text-neon hover:bg-neon/30 transition-colors">
+                <i data-lucide="eye" class="w-3 h-3"></i> Detail
+              </button>
+            </div>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-2 py-0.5 rounded-md bg-neon/10 font-mono text-[10px] text-neon">Web</span>
+            </div>
+            <h3 class="font-mono font-semibold text-sm dark:text-white text-gray-900">Blog CMS</h3>
+            <p class="dark:text-white/40 text-gray-500 text-xs mt-1.5 leading-relaxed">Sistem manajemen blog dengan editor WYSIWYG, kategori, dan komentar.</p>
+          </div>
+        </div>
+        <!-- Project 3 -->
+        <div class="project-card glass glow-border rounded-2xl overflow-hidden group reveal" data-category="tool" style="transition-delay:0.2s">
+          <div class="relative h-48 overflow-hidden">
+            <img src="https://picsum.photos/seed/proq-tool/600/400.jpg" alt="Code Tools" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            <div class="card-overlay absolute inset-0 bg-gradient-to-t from-dark-900/90 to-transparent flex items-end p-5">
+              <button onclick="openModal('codetools')" class="flex items-center gap-2 px-4 py-2 bg-neon/20 border border-neon/30 rounded-lg font-mono text-xs text-neon hover:bg-neon/30 transition-colors">
+                <i data-lucide="eye" class="w-3 h-3"></i> Detail
+              </button>
+            </div>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-2 py-0.5 rounded-md bg-cyan/10 font-mono text-[10px] text-cyan">Tools</span>
+            </div>
+            <h3 class="font-mono font-semibold text-sm dark:text-white text-gray-900">Code Formatter</h3>
+            <p class="dark:text-white/40 text-gray-500 text-xs mt-1.5 leading-relaxed">Alat formatting kode HTML/CSS/JS dengan syntax highlighting dan copy output.</p>
+          </div>
+        </div>
+        <!-- Project 4 -->
+        <div class="project-card glass glow-border rounded-2xl overflow-hidden group reveal" data-category="api">
+          <div class="relative h-48 overflow-hidden">
+            <img src="https://picsum.photos/seed/proj-api/600/400.jpg" alt="REST API" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            <div class="card-overlay absolute inset-0 bg-gradient-to-t from-dark-900/90 to-transparent flex items-end p-5">
+              <button onclick="openModal('restapi')" class="flex items-center gap-2 px-4 py-2 bg-neon/20 border border-neon/30 rounded-lg font-mono text-xs text-neon hover:bg-neon/30 transition-colors">
+                <i data-lucide="eye" class="w-3 h-3"></i> Detail
+              </button>
+            </div>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-2 py-0.5 rounded-md bg-purple/10 font-mono text-[10px] text-purple">API</span>
+            </div>
+            <h3 class="font-mono font-semibold text-sm dark:text-white text-gray-900">REST API — Library System</h3>
+            <p class="dark:text-white/40 text-gray-500 text-xs mt-1.5 leading-relaxed">API perpustakaan dengan auth JWT, CRUD, dan dokumentasi Swagger.</p>
+          </div>
+        </div>
+        <!-- Project 5 -->
+        <div class="project-card glass glow-border rounded-2xl overflow-hidden group reveal" data-category="web" style="transition-delay:0.1s">
+          <div class="relative h-48 overflow-hidden">
+            <img src="https://picsum.photos/seed/proj-landing/600/400.jpg" alt="Landing Page" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            <div class="card-overlay absolute inset-0 bg-gradient-to-t from-dark-900/90 to-transparent flex items-end p-5">
+              <button onclick="openModal('landing')" class="flex items-center gap-2 px-4 py-2 bg-neon/20 border border-neon/30 rounded-lg font-mono text-xs text-neon hover:bg-neon/30 transition-colors">
+                <i data-lucide="eye" class="w-3 h-3"></i> Detail
+              </button>
+            </div>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-2 py-0.5 rounded-md bg-neon/10 font-mono text-[10px] text-neon">Web</span>
+            </div>
+            <h3 class="font-mono font-semibold text-sm dark:text-white text-gray-900">Landing Page — UMKM</h3>
+            <p class="dark:text-white/40 text-gray-500 text-xs mt-1.5 leading-relaxed">Landing page modern untuk UMKM lokal dengan animasi scroll dan responsive.</p>
+          </div>
+        </div>
+        <!-- Project 6 -->
+        <div class="project-card glass glow-border rounded-2xl overflow-hidden group reveal" data-category="tool" style="transition-delay:0.2s">
+          <div class="relative h-48 overflow-hidden">
+            <img src="https://picsum.photos/seed/proj-password/600/400.jpg" alt="Password Gen" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            <div class="card-overlay absolute inset-0 bg-gradient-to-t from-dark-900/90 to-transparent flex items-end p-5">
+              <button onclick="openModal('passgen')" class="flex items-center gap-2 px-4 py-2 bg-neon/20 border border-neon/30 rounded-lg font-mono text-xs text-neon hover:bg-neon/30 transition-colors">
+                <i data-lucide="eye" class="w-3 h-3"></i> Detail
+              </button>
+            </div>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-2 py-0.5 rounded-md bg-cyan/10 font-mono text-[10px] text-cyan">Tools</span>
+            </div>
+            <h3 class="font-mono font-semibold text-sm dark:text-white text-gray-900">Password Generator</h3>
+            <p class="dark:text-white/40 text-gray-500 text-xs mt-1.5 leading-relaxed">Generator password aman dengan opsi panjang, simbol, dan strength meter.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== GAMES ==================== -->
+  <section id="games" class="relative py-24 md:py-32 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12 reveal">
+        <span class="font-mono text-xs text-neon tracking-widest uppercase">03 — Games</span>
+        <h2 class="font-mono font-bold text-3xl md:text-4xl tracking-tight mt-3 dark:text-white text-gray-900">Mini Games</h2>
+        <p class="dark:text-white/50 text-gray-500 mt-3 text-sm max-w-lg mx-auto">Game-game kecil yang saya buat untuk belajar game loop, collision, dan Canvas API.</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Game 1 -->
+        <div class="reveal glass glow-border rounded-2xl overflow-hidden group">
+          <div class="relative h-56 overflow-hidden">
+            <img src="https://picsum.photos/seed/game-ninja/700/400.jpg" alt="Cyber Ninja Runner" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/40 to-transparent"></div>
+            <div class="absolute bottom-4 left-5 right-5 flex items-end justify-between">
+              <div>
+                <span class="px-2 py-0.5 rounded-md bg-neon/20 font-mono text-[10px] text-neon mb-2 inline-block">Runner</span>
+                <h3 class="font-mono font-semibold text-lg text-white">Cyber Ninja Runner</h3>
+              </div>
+              <a href="game/index.html" class="w-12 h-12 rounded-xl bg-neon flex items-center justify-center hover:bg-neon/90 transition-colors glow-box-strong">
+                <i data-lucide="play" class="w-5 h-5 text-dark-900 fill-dark-900"></i>
+              </a>
+            </div>
+          </div>
+          <div class="p-5 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="text-center">
+                <p class="font-mono text-lg font-bold text-neon">247</p>
+                <p class="font-mono text-[10px] dark:text-white/40 text-gray-400">Plays</p>
+              </div>
+              <div class="w-px h-8 dark:bg-white/10 bg-gray-200"></div>
+              <div class="text-center">
+                <p class="font-mono text-lg font-bold dark:text-white text-gray-900">1,240</p>
+                <p class="font-mono text-[10px] dark:text-white/40 text-gray-400">High Score</p>
+              </div>
+            </div>
+            <div class="flex -space-x-2">
+              <div class="w-6 h-6 rounded-full bg-neon/20 border-2 border-dark-800 flex items-center justify-center"><span class="text-[8px] text-neon">A</span></div>
+              <div class="w-6 h-6 rounded-full bg-cyan/20 border-2 border-dark-800 flex items-center justify-center"><span class="text-[8px] text-cyan">B</span></div>
+              <div class="w-6 h-6 rounded-full bg-purple/20 border-2 border-dark-800 flex items-center justify-center"><span class="text-[8px] text-purple">+5</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Game 2 -->
+        <div class="reveal glass glow-border rounded-2xl overflow-hidden group" style="transition-delay:0.15s">
+          <div class="relative h-56 overflow-hidden">
+            <img src="https://picsum.photos/seed/game-snake/700/400.jpg" alt="Code Snake" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/40 to-transparent"></div>
+            <div class="absolute bottom-4 left-5 right-5 flex items-end justify-between">
+              <div>
+                <span class="px-2 py-0.5 rounded-md bg-purple/20 font-mono text-[10px] text-purple mb-2 inline-block">Arcade</span>
+                <h3 class="font-mono font-semibold text-lg text-white">Code Snake</h3>
+              </div>
+              <a href="game/index.html" class="w-12 h-12 rounded-xl bg-purple flex items-center justify-center hover:bg-purple/90 transition-colors" style="box-shadow:0 0 20px rgba(168,85,247,0.4)">
+                <i data-lucide="play" class="w-5 h-5 text-white fill-white"></i>
+              </a>
+            </div>
+          </div>
+          <div class="p-5 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="text-center">
+                <p class="font-mono text-lg font-bold text-purple">183</p>
+                <p class="font-mono text-[10px] dark:text-white/40 text-gray-400">Plays</p>
+              </div>
+              <div class="w-px h-8 dark:bg-white/10 bg-gray-200"></div>
+              <div class="text-center">
+                <p class="font-mono text-lg font-bold dark:text-white text-gray-900">89</p>
+                <p class="font-mono text-[10px] dark:text-white/40 text-gray-400">High Score</p>
+              </div>
+            </div>
+            <div class="flex -space-x-2">
+              <div class="w-6 h-6 rounded-full bg-purple/20 border-2 border-dark-800 flex items-center justify-center"><span class="text-[8px] text-purple">C</span></div>
+              <div class="w-6 h-6 rounded-full bg-neon/20 border-2 border-dark-800 flex items-center justify-center"><span class="text-[8px] text-neon">D</span></div>
+              <div class="w-6 h-6 rounded-full bg-cyan/20 border-2 border-dark-800 flex items-center justify-center"><span class="text-[8px] text-cyan">+3</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TERMINAL ==================== -->
+  <section class="relative py-16 px-6 dark:bg-dark-800/50 bg-gray-50/50 transition-colors">
+    <div class="max-w-2xl mx-auto reveal">
+      <div class="terminal-window rounded-2xl overflow-hidden dark:bg-dark-900 bg-white border dark:border-white/10 border-gray-200">
+        <!-- Title Bar -->
+        <div class="flex items-center gap-2 px-4 py-3 dark:bg-dark-800 bg-gray-50 border-b dark:border-white/5 border-gray-100">
+          <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+          <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+          <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+          <span class="ml-3 font-mono text-xs dark:text-white/30 text-gray-400">ardev@portfolio:~</span>
+        </div>
+        <!-- Terminal Body -->
+        <div class="p-5 h-64 overflow-y-auto" id="terminal-body">
+          <div class="font-mono text-sm">
+            <p class="dark:text-white/60 text-gray-500">Welcome to ArDev Terminal v2.0</p>
+            <p class="dark:text-white/30 text-gray-400 text-xs mt-1 mb-4">Type <span class="text-neon">help</span> to see available commands.</p>
+          </div>
+        </div>
+        <!-- Input -->
+        <div class="flex items-center gap-2 px-5 py-3 border-t dark:border-white/5 border-gray-100">
+          <span class="font-mono text-sm text-neon">$</span>
+          <input type="text" id="terminal-input" class="flex-1 bg-transparent font-mono text-sm dark:text-white text-gray-900 outline-none placeholder:dark:text-white/20 placeholder:text-gray-300" placeholder="Type a command..." autocomplete="off" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CONTACT ==================== -->
+  <section id="contact" class="relative py-24 md:py-32 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12 reveal">
+        <span class="font-mono text-xs text-neon tracking-widest uppercase">04 — Contact</span>
+        <h2 class="font-mono font-bold text-3xl md:text-4xl tracking-tight mt-3 dark:text-white text-gray-900">Mari Terhubung</h2>
+        <p class="dark:text-white/50 text-gray-500 mt-3 text-sm max-w-lg mx-auto">Punya proyek menarik? Atau sekadar ingin ngobrol tentang teknologi? Jangan ragu untuk menghubungi saya.</p>
+      </div>
+      <div class="grid md:grid-cols-5 gap-10">
+        <!-- Left Info -->
+        <div class="md:col-span-2 reveal">
+          <div class="space-y-6">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-neon/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <i data-lucide="mail" class="w-4 h-4 text-neon"></i>
+              </div>
+              <div>
+                <p class="font-mono text-xs dark:text-white/40 text-gray-400 mb-1">Email</p>
+                <button onclick="copyEmail()" class="font-mono text-sm dark:text-white text-gray-900 hover:text-neon transition-colors flex items-center gap-2 group">
+                  ardev@email.com
+                  <i data-lucide="copy" class="w-3 h-3 dark:text-white/30 text-gray-400 group-hover:text-neon transition-colors"></i>
+                </button>
+              </div>
+            </div>
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-cyan/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <i data-lucide="map-pin" class="w-4 h-4 text-cyan"></i>
+              </div>
+              <div>
+                <p class="font-mono text-xs dark:text-white/40 text-gray-400 mb-1">Lokasi</p>
+                <p class="font-mono text-sm dark:text-white text-gray-900">Indonesia</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-purple/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <i data-lucide="github" class="w-4 h-4 text-purple"></i>
+              </div>
+              <div>
+                <p class="font-mono text-xs dark:text-white/40 text-gray-400 mb-1">GitHub</p>
+                <a href="#" class="font-mono text-sm dark:text-white text-gray-900 hover:text-neon transition-colors">github.com/ardev</a>
+              </div>
+            </div>
+          </div>
+          <!-- Social Icons -->
+          <div class="flex items-center gap-3 mt-8">
+            <a href="#" class="w-10 h-10 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center dark:hover:bg-neon/20 hover:bg-neon/10 dark:hover:text-neon hover:text-neon transition-all dark:text-white/40 text-gray-500" aria-label="GitHub">
+              <i data-lucide="github" class="w-4 h-4"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center dark:hover:bg-neon/20 hover:bg-neon/10 dark:hover:text-neon hover:text-neon transition-all dark:text-white/40 text-gray-500" aria-label="LinkedIn">
+              <i data-lucide="linkedin" class="w-4 h-4"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center dark:hover:bg-neon/20 hover:bg-neon/10 dark:hover:text-neon hover:text-neon transition-all dark:text-white/40 text-gray-500" aria-label="Instagram">
+              <i data-lucide="instagram" class="w-4 h-4"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center dark:hover:bg-neon/20 hover:bg-neon/10 dark:hover:text-neon hover:text-neon transition-all dark:text-white/40 text-gray-500" aria-label="Twitter">
+              <i data-lucide="twitter" class="w-4 h-4"></i>
             </a>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Projects -->
-  <section id="projects" class="py-20 bg-gray-900">
-    <div class="max-w-4xl mx-auto px-6">
-      <h2 class="text-3xl font-bold text-center mb-10 text-white fade-in">Proyek Lainnya</h2>
-      <div class="grid md:grid-cols-2 gap-8">
-        <div class="border border-gray-700 bg-gray-800 rounded-3xl overflow-hidden card-hover fade-in">
-          <div class="h-56 bg-gradient-to-br from-emerald-900 to-cyan-900 flex items-center justify-center text-6xl">
-            🐍
-          </div>
-          <div class="p-8">
-            <h3 class="font-bold text-xl text-white">Code Snake — Bug Hunter</h3>
-            <p class="text-gray-400 mt-3">Game Snake klasik dengan desain neon programmer yang saya buat sendiri.</p>
-          </div>
+        <!-- Right Form -->
+        <div class="md:col-span-3 reveal" style="transition-delay:0.15s">
+          <form id="contact-form" class="glass glow-border rounded-2xl p-6 space-y-5">
+            <div>
+              <label class="font-mono text-xs dark:text-white/50 text-gray-500 mb-2 block">Nama</label>
+              <input type="text" name="name" required class="w-full px-4 py-3 rounded-xl dark:bg-white/5 bg-gray-50 border dark:border-white/10 border-gray-200 font-mono text-sm dark:text-white text-gray-900 outline-none focus:border-neon/50 transition-colors placeholder:dark:text-white/20 placeholder:text-gray-300" placeholder="John Doe" />
+            </div>
+            <div>
+              <label class="font-mono text-xs dark:text-white/50 text-gray-500 mb-2 block">Email</label>
+              <input type="email" name="email" required class="w-full px-4 py-3 rounded-xl dark:bg-white/5 bg-gray-50 border dark:border-white/10 border-gray-200 font-mono text-sm dark:text-white text-gray-900 outline-none focus:border-neon/50 transition-colors placeholder:dark:text-white/20 placeholder:text-gray-300" placeholder="john@email.com" />
+            </div>
+            <div>
+              <label class="font-mono text-xs dark:text-white/50 text-gray-500 mb-2 block">Pesan</label>
+              <textarea name="message" required rows="4" class="w-full px-4 py-3 rounded-xl dark:bg-white/5 bg-gray-50 border dark:border-white/10 border-gray-200 font-mono text-sm dark:text-white text-gray-900 outline-none focus:border-neon/50 transition-colors resize-none placeholder:dark:text-white/20 placeholder:text-gray-300" placeholder="Tulis pesan Anda..."></textarea>
+            </div>
+            <button type="submit" class="w-full py-3.5 bg-neon text-dark-900 font-mono font-semibold text-sm rounded-xl hover:bg-neon/90 transition-all glow-box-strong flex items-center justify-center gap-2">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              Kirim Pesan
+            </button>
+            <p id="form-feedback" class="font-mono text-xs text-center hidden"></p>
+          </form>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="bg-black text-gray-400 py-12">
-    <div class="max-w-4xl mx-auto px-6 text-center">
-      <p class="text-lg">© 2026 ArDev • azzyqq</p>
-      <p class="text-lg">Noted : Web ini masih pengembangan</p>
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="py-8 px-6 border-t dark:border-white/5 border-gray-200">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="font-mono font-bold text-sm dark:text-white/40 text-gray-400">&lt;/&gt;</span>
+        <span class="font-mono text-xs dark:text-white/30 text-gray-400">© 2025 ArDev. Built with passion & coffee.</span>
+      </div>
+      <div class="flex items-center gap-1 font-mono text-xs dark:text-white/20 text-gray-300">
+        <span>Made with</span>
+        <i data-lucide="heart" class="w-3 h-3 text-neon fill-neon"></i>
+        <span>and lots of</span>
+        <i data-lucide="coffee" class="w-3 h-3 text-amber-500"></i>
+      </div>
     </div>
   </footer>
 
-  <!-- Script Animasi -->
+  <!-- ==================== BACK TO TOP ==================== -->
+  <button id="back-to-top" class="fixed bottom-8 right-8 w-12 h-12 rounded-xl glass glow-border flex items-center justify-center dark:text-white/60 text-gray-500 dark:hover:text-neon hover:text-neon transition-all z-50" aria-label="Back to top">
+    <i data-lucide="arrow-up" class="w-5 h-5"></i>
+  </button>
+
+  <!-- ==================== PROJECT MODAL ==================== -->
+  <div id="project-modal" class="modal-backdrop fixed inset-0 z-[9990] flex items-center justify-center p-4 dark:bg-dark-900/80 bg-black/50 backdrop-blur-sm">
+    <div class="modal-content glass rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div class="relative h-56 overflow-hidden rounded-t-2xl">
+        <img id="modal-image" src="" alt="" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-t from-dark-900/80 to-transparent"></div>
+        <button onclick="closeModal()" class="absolute top-4 right-4 w-9 h-9 rounded-lg dark:bg-dark-900/60 bg-white/80 flex items-center justify-center dark:text-white/70 text-gray-600 hover:text-neon transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="p-6">
+        <div id="modal-badge" class="mb-2"></div>
+        <h3 id="modal-title" class="font-mono font-bold text-xl dark:text-white text-gray-900 mb-3"></h3>
+        <p id="modal-desc" class="dark:text-white/60 text-gray-500 text-sm leading-relaxed mb-5"></p>
+        <div id="modal-tech" class="mb-6"></div>
+        <div class="flex items-center gap-3">
+          <a id="modal-github" href="#" target="_blank" class="flex items-center gap-2 px-5 py-2.5 rounded-xl dark:bg-white/5 bg-gray-100 font-mono text-sm dark:text-white/70 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors">
+            <i data-lucide="github" class="w-4 h-4"></i> GitHub
+          </a>
+          <a id="modal-demo" href="#" target="_blank" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-neon text-dark-900 font-mono text-sm font-semibold hover:bg-neon/90 transition-colors glow-box-strong">
+            <i data-lucide="external-link" class="w-4 h-4"></i> Live Demo
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SCRIPTS ==================== -->
   <script>
-    const fadeElements = document.querySelectorAll('.fade-in');
-    const observer = new IntersectionObserver((entries) => {
+    // ===== PROJECT DATA =====
+    const projectData = {
+      ecommerce: {
+        title: 'E-Commerce Platform',
+        desc: 'Platform e-commerce full-stack yang dibangun dengan Laravel di backend dan Tailwind CSS di frontend. Fitur meliputi autentikasi, keranjang belanja, checkout dengan integrasi payment gateway Midtrans, dan admin dashboard untuk mengelola produk & pesanan.',
+        image: 'https://picsum.photos/seed/proj-ecommerce/800/500.jpg',
+        badge: '<span class="px-2.5 py-1 rounded-lg bg-neon/10 font-mono text-xs text-neon">Web App</span>',
+        tech: ['Laravel', 'Blade', 'Tailwind CSS', 'MySQL', 'Midtrans'],
+        github: '#', demo: '#'
+      },
+      blog: {
+        title: 'Blog CMS',
+        desc: 'Content Management System untuk blog dengan fitur editor WYSIWYG (TinyMCE), manajemen kategori & tag, sistem komentar, pencarian, dan SEO-friendly URL. Dibangun sebagai tugas proyek akhir semester.',
+        image: 'https://picsum.photos/seed/proj-blog/800/500.jpg',
+        badge: '<span class="px-2.5 py-1 rounded-lg bg-neon/10 font-mono text-xs text-neon">Web App</span>',
+        tech: ['PHP', 'MySQL', 'Tailwind CSS', 'TinyMCE'],
+        github: '#', demo: '#'
+      },
+      codetools: {
+        title: 'Code Formatter',
+        desc: 'Alat berbasis web untuk memformat dan beautify kode HTML, CSS, dan JavaScript. Dilengkapi syntax highlighting, line numbers, dan fitur copy-to-clipboard untuk output yang sudah diformat.',
+        image: 'https://picsum.photos/seed/proq-tool/800/500.jpg',
+        badge: '<span class="px-2.5 py-1 rounded-lg bg-cyan/10 font-mono text-xs text-cyan">Tool</span>',
+        tech: ['JavaScript', 'HTML', 'CSS', 'Prism.js'],
+        github: '#', demo: '#'
+      },
+      restapi: {
+        title: 'REST API — Library System',
+        desc: 'RESTful API untuk sistem perpustakaan dengan fitur autentikasi JWT, CRUD operasi untuk buku & anggota, pagination, sorting, filtering, dan dokumentasi API menggunakan Swagger/OpenAPI.',
+        image: 'https://picsum.photos/seed/proj-api/800/500.jpg',
+        badge: '<span class="px-2.5 py-1 rounded-lg bg-purple/10 font-mono text-xs text-purple">API</span>',
+        tech: ['Laravel', 'JWT', 'MySQL', 'Swagger'],
+        github: '#', demo: '#'
+      },
+      landing: {
+        title: 'Landing Page — UMKM',
+        desc: 'Landing page modern untuk UMKM lokal yang menjual produk kerajinan. Menggunakan scroll-triggered animations, responsive image gallery, dan form pemesanan sederhana.',
+        image: 'https://picsum.photos/seed/proj-landing/800/500.jpg',
+        badge: '<span class="px-2.5 py-1 rounded-lg bg-neon/10 font-mono text-xs text-neon">Web</span>',
+        tech: ['HTML5', 'Tailwind CSS', 'JavaScript', 'GSAP'],
+        github: '#', demo: '#'
+      },
+      passgen: {
+        title: 'Password Generator',
+        desc: 'Tool generator password yang aman dengan opsi kustomisasi panjang, karakter uppercase/lowercase, angka, dan simbol khusus. Dilengkapi strength meter yang menghitung kekuatan password secara real-time.',
+        image: 'https://picsum.photos/seed/proj-password/800/500.jpg',
+        badge: '<span class="px-2.5 py-1 rounded-lg bg-cyan/10 font-mono text-xs text-cyan">Tool</span>',
+        tech: ['JavaScript', 'HTML', 'CSS'],
+        github: '#', demo: '#'
+      }
+    };
+
+    // ===== MODAL =====
+    function openModal(id) {
+      const p = projectData[id];
+      if (!p) return;
+      document.getElementById('modal-image').src = p.image;
+      document.getElementById('modal-title').textContent = p.title;
+      document.getElementById('modal-desc').textContent = p.desc;
+      document.getElementById('modal-badge').innerHTML = p.badge;
+      document.getElementById('modal-github').href = p.github;
+      document.getElementById('modal-demo').href = p.demo;
+      document.getElementById('modal-tech').innerHTML = '<div class="flex flex-wrap gap-2">' + p.tech.map(t => `<span class="px-3 py-1 rounded-lg dark:bg-white/5 bg-gray-100 font-mono text-xs dark:text-white/50 text-gray-500">${t}</span>`).join('') + '</div>';
+      document.getElementById('project-modal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      lucide.createIcons();
+    }
+    function closeModal() {
+      document.getElementById('project-modal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    document.getElementById('project-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    // ===== CUSTOM CURSOR =====
+    const dot = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
+    let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+    document.addEventListener('mousemove', e => {
+      mouseX = e.clientX; mouseY = e.clientY;
+      dot.style.left = mouseX - 4 + 'px';
+      dot.style.top = mouseY - 4 + 'px';
+    });
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.15;
+      ringY += (mouseY - ringY) * 0.15;
+      ring.style.left = ringX - 20 + 'px';
+      ring.style.top = ringY - 20 + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+    document.querySelectorAll('a, button, input, textarea').forEach(el => {
+      el.addEventListener('mouseenter', () => ring.classList.add('hover'));
+      el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
+    });
+
+    // ===== SCROLL PROGRESS =====
+    const scrollProgress = document.getElementById('scroll-progress');
+    window.addEventListener('scroll', () => {
+      const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+      scrollProgress.style.width = scrolled + '%';
+    });
+
+    // ===== BACK TO TOP =====
+    const backToTop = document.getElementById('back-to-top');
+    window.addEventListener('scroll', () => {
+      backToTop.classList.toggle('visible', window.scrollY > 500);
+    });
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ===== TYPING EFFECT =====
+    const typingEl = document.getElementById('typing-text');
+    const phrases = ['Web Developer.', 'Game Developer.', 'RPL Student.', 'Problem Solver.', 'Coffee Enthusiast.'];
+    let phraseIdx = 0, charIdx = 0, isDeleting = false;
+    function typeEffect() {
+      const current = phrases[phraseIdx];
+      if (isDeleting) {
+        typingEl.textContent = current.substring(0, charIdx - 1);
+        charIdx--;
+      } else {
+        typingEl.textContent = current.substring(0, charIdx + 1);
+        charIdx++;
+      }
+      let speed = isDeleting ? 40 : 80;
+      if (!isDeleting && charIdx === current.length) {
+        speed = 2000; isDeleting = true;
+      } else if (isDeleting && charIdx === 0) {
+        isDeleting = false; phraseIdx = (phraseIdx + 1) % phrases.length; speed = 500;
+      }
+      setTimeout(typeEffect, speed);
+    }
+    typeEffect();
+
+    // ===== PARTICLE CANVAS =====
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.offsetWidth;
+      canvas.height = canvas.parentElement.offsetHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 0.5;
+        this.speedX = (Math.random() - 0.5) * 0.5;
+        this.speedY = (Math.random() - 0.5) * 0.5;
+        this.opacity = Math.random() * 0.5 + 0.1;
+      }
+      update() {
+        this.x += this.speedX; this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+      }
+      draw() {
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,255,136,${this.opacity})`; ctx.fill();
+      }
+    }
+    for (let i = 0; i < 60; i++) particles.push(new Particle());
+    function drawLines() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(0,255,136,${0.08 * (1 - dist / 120)})`;
+            ctx.lineWidth = 0.5; ctx.stroke();
+          }
+        }
+      }
+    }
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      drawLines();
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // ===== SCROLL REVEAL =====
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) entry.target.classList.add('visible');
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          // Animate skill bars inside
+          entry.target.querySelectorAll('.skill-fill').forEach(bar => bar.classList.add('animated'));
+        }
       });
-    }, { threshold: 0.1 });
-    fadeElements.forEach(el => observer.observe(el));
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    revealElements.forEach(el => revealObserver.observe(el));
+
+    // ===== PROJECT FILTER =====
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const projectCards = document.querySelectorAll('#project-grid .project-card');
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        projectCards.forEach(card => {
+          if (filter === 'all' || card.dataset.category === filter) {
+            card.style.display = ''; card.style.opacity = '0'; card.style.transform = 'translateY(20px)';
+            requestAnimationFrame(() => {
+              card.style.transition = 'all 0.4s ease';
+              card.style.opacity = '1'; card.style.transform = 'translateY(0)';
+            });
+          } else {
+            card.style.opacity = '0'; card.style.transform = 'translateY(20px)';
+            setTimeout(() => { card.style.display = 'none'; }, 400);
+          }
+        });
+      });
+    });
+
+    // ===== MOBILE MENU =====
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    let menuOpen = false;
+    mobileMenuBtn.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      mobileMenu.classList.toggle('hidden', !menuOpen);
+    });
+    document.querySelectorAll('.mobile-nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        menuOpen = false; mobileMenu.classList.add('hidden');
+      });
+    });
+
+    // ===== THEME TOGGLE =====
+    const themeToggle = document.getElementById('theme-toggle');
+    themeToggle.addEventListener('click', () => {
+      const html = document.documentElement;
+      const body = document.body;
+      html.classList.toggle('dark');
+      html.classList.toggle('light');
+      body.classList.toggle('dark');
+      body.classList.toggle('light');
+      body.classList.toggle('bg-dark-900');
+      body.classList.toggle('text-white');
+      body.classList.toggle('bg-white');
+      body.classList.toggle('text-gray-900');
+      lucide.createIcons();
+    });
+
+    // ===== TOAST =====
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const colors = type === 'success' ? 'border-neon/30 text-neon' : 'border-red-400/30 text-red-400';
+      toast.className = `toast glass ${colors} border rounded-xl px-5 py-3 font-mono text-sm flex items-center gap-3 min-w-[280px]`;
+      const icon = type === 'success' ? 'check-circle' : 'alert-circle';
+      toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 flex-shrink-0"></i><span>${message}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+      requestAnimationFrame(() => toast.classList.add('show'));
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+      }, 3000);
+    }
+
+    // ===== COPY EMAIL =====
+    function copyEmail() {
+      navigator.clipboard.writeText('ardev@email.com').then(() => {
+        showToast('Email berhasil disalin!');
+      }).catch(() => {
+        showToast('Gagal menyalin email', 'error');
+      });
+    }
+
+    // ===== CONTACT FORM =====
+    document.getElementById('contact-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const btn = this.querySelector('button[type="submit"]');
+      const feedback = document.getElementById('form-feedback');
+      btn.disabled = true;
+      btn.innerHTML = '<svg class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-dashoffset="10"/></svg> Mengirim...';
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> Kirim Pesan';
+        lucide.createIcons();
+        feedback.textContent = '✓ Pesan berhasil dikirim! (demo only)';
+        feedback.className = 'font-mono text-xs text-center text-neon mt-2';
+        this.reset();
+        showToast('Pesan berhasil dikirim!');
+        setTimeout(() => { feedback.className = 'font-mono text-xs text-center hidden'; }, 4000);
+      }, 1500);
+    });
+
+    // ===== TERMINAL =====
+    const terminalInput = document.getElementById('terminal-input');
+    const terminalBody = document.getElementById('terminal-body');
+    const terminalCommands = {
+      help: `<span class="text-neon">Available commands:</span><br>
+  <span class="text-cyan">whoami</span>      — Siapa ArDev?<br>
+  <span class="text-cyan">projects</span>    — Lihat daftar proyek<br>
+  <span class="text-cyan">skills</span>      — Tech stack yang dikuasai<br>
+  <span class="text-cyan">play game</span>   — Buka halaman game<br>
+  <span class="text-cyan">contact</span>     — Info kontak<br>
+  <span class="text-cyan">theme</span>       — Toggle dark/light mode<br>
+  <span class="text-cyan">clear</span>       — Bersihkan terminal<br>
+  <span class="text-cyan">secret</span>      — ???`,
+      whoami: `<span class="text-neon">ArDev</span> — Mahasiswa RPL yang suka bikin web & game.<br>Saat ini fokus belajar Laravel, JavaScript, dan Canvas API.<br>Motto: "Code with purpose, ship with confidence."`,
+      projects: `📦 <span class="text-white">E-Commerce Platform</span> — Laravel + Tailwind<br>📝 <span class="text-white">Blog CMS</span> — PHP + MySQL<br>🔧 <span class="text-white">Code Formatter</span> — Vanilla JS<br>🔌 <span class="text-white">REST API Library</span> — Laravel + JWT<br>🎯 <span class="text-white">Landing Page UMKM</span> — HTML + GSAP<br>🔐 <span class="text-white">Password Generator</span> — JavaScript<br><br> Ketik <span class="text-neon">projects</span> di section Projects untuk detail.`,
+      skills: `<span class="text-neon">Frontend:</span>  HTML(90%) CSS(90%) JS(80%) Tailwind<br><span class="text-cyan">Backend:</span>   PHP(75%) Laravel(70%) MySQL(75%)<br><span class="text-purple">Other:</span>     Python(65%) Git(75%) Canvas API(70%)`,
+      'play game': `🎮 Membuka halaman game...<br><a href="#games" class="text-neon underline">Klik di sini untuk ke section Games</a>`,
+      contact: `📧 Email: <span class="text-neon">ardev@email.com</span><br>📍 Lokasi: Indonesia<br>🔗 GitHub: <span class="text-cyan">github.com/ardev</span><br>💬 LinkedIn: <span class="text-cyan">linkedin.com/in/ardev</span>`,
+      theme: `🔄 Toggling theme...`,
+      clear: 'CLEAR',
+      secret: `🎉 <span class="text-neon">You found the easter egg!</span><br><br>"The best way to predict the future is to create it."<br>— Alan Kay<br><br>Terima kasih sudah explori portfolio saya! 🚀`
+    };
+
+    terminalInput.addEventListener('keydown', function(e) {
+      if (e.key !== 'Enter') return;
+      const cmd = this.value.trim().toLowerCase();
+      if (!cmd) return;
+
+      // Add user input
+      const userLine = document.createElement('div');
+      userLine.className = 'font-mono text-sm mb-2';
+      userLine.innerHTML = `<span class="text-neon">$</span> <span class="dark:text-white text-gray-900">${cmd}</span>`;
+      terminalBody.appendChild(userLine);
+
+      // Process command
+      const response = terminalCommands[cmd];
+      if (response === 'CLEAR') {
+        terminalBody.innerHTML = '';
+      } else if (response) {
+        const resLine = document.createElement('div');
+        resLine.className = 'font-mono text-sm dark:text-white/70 text-gray-600 mb-4 leading-relaxed';
+        resLine.innerHTML = response;
+        terminalBody.appendChild(resLine);
+        if (cmd === 'theme') themeToggle.click();
+      } else {
+        const errLine = document.createElement('div');
+        errLine.className = 'font-mono text-sm text-red-400 mb-4';
+        errLine.innerHTML = `Command not found: <span class="underline">${cmd}</span>. Type <span class="text-neon">help</span> for available commands.`;
+        terminalBody.appendChild(errLine);
+      }
+
+      this.value = '';
+      terminalBody.scrollTop = terminalBody.scrollHeight;
+    });
+
+    // Click terminal to focus input
+    document.querySelector('.terminal-window').addEventListener('click', () => terminalInput.focus());
+
+    // ===== NAVBAR ACTIVE STATE ON SCROLL =====
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-link');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const top = section.offsetTop - 200;
+        if (window.scrollY >= top) current = section.getAttribute('id');
+      });
+      navLinks.forEach(link => {
+        link.classList.remove('dark:!text-neon', '!text-neon');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('dark:!text-neon', '!text-neon');
+        }
+      });
+    });
+
+    // ===== INIT LUCIDE =====
+    lucide.createIcons();
   </script>
 </body>
 </html>
