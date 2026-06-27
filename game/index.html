@@ -130,8 +130,16 @@
         .lb-row.lb-first { color: #00ff88; }
         .lb-row.lb-new { background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.2); }
         #gameCanvas {
-            border-radius: 8px; border: 1px solid rgba(0,255,136,0.12);
-            box-shadow: 0 0 30px rgba(0,255,136,0.06), 0 0 60px rgba(0,0,0,0.5); display: block;
+            border-radius: 10px;
+            /* === GARIS TEPI YANG JELAS === */
+            border: 3px solid rgba(0,255,136,0.55);
+            box-shadow:
+                0 0 8px rgba(0,255,136,0.25),
+                0 0 20px rgba(0,255,136,0.12),
+                0 0 50px rgba(0,255,136,0.06),
+                0 0 80px rgba(0,0,0,0.6),
+                inset 0 0 30px rgba(0,255,136,0.03);
+            display: block;
         }
         .powerup-bar-track {
             width: 80px; height: 6px; background: rgba(255,255,255,0.06);
@@ -604,6 +612,8 @@
         grad.addColorStop(1, 'rgba(0,0,0,0)');
         c.fillStyle = grad;
         c.fillRect(0, 0, s, s);
+        // Juga gambar garis tepi di menu agar konsisten
+        this.drawBorder(c, s);
     };
 
     // ----- MULAI GAME -----
@@ -658,7 +668,6 @@
             this.update();
         }
 
-        // update() bisa trigger game over
         if (this.state !== 'playing') return;
 
         this.updateEffects();
@@ -895,6 +904,24 @@
         document.getElementById('scoreDisplay').textContent = this.score;
     };
 
+    // ----- TOAST -----
+    Game.prototype.showToast = function(msg, color) {
+        var container = document.getElementById('toastContainer');
+        var el = document.createElement('div');
+        el.style.cssText = 'padding:8px 16px;border-radius:8px;font-size:11px;font-weight:700;font-family:"JetBrains Mono",monospace;letter-spacing:0.05em;color:' + color + ';background:rgba(0,0,0,0.85);border:1px solid ' + color + '44;box-shadow:0 0 12px ' + color + '22;pointer-events:auto;opacity:0;transform:translateX(20px);transition:all 0.3s ease;';
+        el.textContent = msg;
+        container.appendChild(el);
+        requestAnimationFrame(function() {
+            el.style.opacity = '1';
+            el.style.transform = 'translateX(0)';
+        });
+        setTimeout(function() {
+            el.style.opacity = '0';
+            el.style.transform = 'translateX(20px)';
+            setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+        }, 2000);
+    };
+
     // ----- RENDER -----
     Game.prototype.render = function() {
         var c = this.ctx, s = this.canvasSize, cs = this.cellSize;
@@ -919,6 +946,10 @@
         this.drawSnake(c, cs);
         for (var i = 0; i < this.particles.length; i++) this.particles[i].draw(c);
         for (var j = 0; j < this.floatingTexts.length; j++) this.floatingTexts[j].draw(c);
+
+        // Gambar garis tepi di atas semua elemen agar selalu terlihat jelas
+        this.drawBorder(c, s);
+
         c.restore();
     };
 
@@ -937,6 +968,66 @@
                 c.beginPath(); c.arc(x * cs, y * cs, 1, 0, Math.PI * 2); c.fill();
             }
         }
+    };
+
+    // =========================================================
+    // GARIS TEPI ARENA — digambar di dalam canvas
+    // =========================================================
+    Game.prototype.drawBorder = function(c, s) {
+        var now = Date.now();
+        // Pulse halus agar terasa hidup tapi tetap jelas
+        var pulse = Math.sin(now * 0.002) * 0.15 + 0.85;
+        var lineW = 3;
+        var halfLine = lineW / 2;
+
+        c.save();
+
+        // Layer 1: glow luar yang lebar (ambient)
+        c.strokeStyle = 'rgba(0,255,136,' + (0.08 * pulse).toFixed(3) + ')';
+        c.lineWidth = 12;
+        c.shadowColor = '#00ff88';
+        c.shadowBlur = 20 * pulse;
+        c.strokeRect(halfLine, halfLine, s - lineW, s - lineW);
+
+        // Layer 2: glow medium
+        c.shadowBlur = 10 * pulse;
+        c.strokeStyle = 'rgba(0,255,136,' + (0.2 * pulse).toFixed(3) + ')';
+        c.lineWidth = 6;
+        c.strokeRect(halfLine, halfLine, s - lineW, s - lineW);
+
+        // Layer 3: garis utama — tebal dan terang
+        c.shadowBlur = 6 * pulse;
+        c.strokeStyle = 'rgba(0,255,136,' + (0.7 * pulse).toFixed(3) + ')';
+        c.lineWidth = lineW;
+        c.strokeRect(halfLine, halfLine, s - lineW, s - lineW);
+
+        // Layer 4: garis inti putih-hijau paling terang (1px di tengah)
+        c.shadowBlur = 0;
+        c.strokeStyle = 'rgba(0,255,136,' + (0.95 * pulse).toFixed(3) + ')';
+        c.lineWidth = 1.5;
+        c.strokeRect(halfLine, halfLine, s - lineW, s - lineW);
+
+        // Tambahkan corner accent — titik terang di 4 sudut
+        var cornerSize = 14 * pulse;
+        var cornerAlpha = (0.9 * pulse).toFixed(3);
+        c.fillStyle = 'rgba(0,255,136,' + cornerAlpha + ')';
+        c.shadowColor = '#00ff88';
+        c.shadowBlur = 8;
+
+        // Sudut kiri atas
+        c.fillRect(0, 0, cornerSize, 2.5);
+        c.fillRect(0, 0, 2.5, cornerSize);
+        // Sudut kanan atas
+        c.fillRect(s - cornerSize, 0, cornerSize, 2.5);
+        c.fillRect(s - 2.5, 0, 2.5, cornerSize);
+        // Sudut kiri bawah
+        c.fillRect(0, s - 2.5, cornerSize, 2.5);
+        c.fillRect(0, s - cornerSize, 2.5, cornerSize);
+        // Sudut kanan bawah
+        c.fillRect(s - cornerSize, s - 2.5, cornerSize, 2.5);
+        c.fillRect(s - 2.5, s - cornerSize, 2.5, cornerSize);
+
+        c.restore();
     };
 
     Game.prototype.drawSnake = function(c, cs) {
@@ -1092,25 +1183,12 @@
         container.innerHTML = html;
     };
 
-    // ----- TOAST -----
-    Game.prototype.showToast = function(message, color) {
-        var container = document.getElementById('toastContainer');
-        var toast = document.createElement('div');
-        toast.className = 'animate-slide-up pointer-events-auto';
-        toast.style.cssText = 'background:rgba(10,10,18,0.92);border:1px solid '+color+'44;color:'+color+';padding:8px 16px;border-radius:8px;font-size:11px;font-family:"JetBrains Mono",monospace;font-weight:600;letter-spacing:0.05em;box-shadow:0 0 12px '+color+'22;white-space:nowrap;';
-        toast.textContent = message;
-        container.appendChild(toast);
-        setTimeout(function() {
-            toast.style.transition = 'opacity 0.3s';
-            toast.style.opacity = '0';
-            setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
-        }, 2000);
-    };
-
     // =========================================================
     // INISIALISASI
     // =========================================================
-    game = new Game();
+    window.addEventListener('DOMContentLoaded', function() {
+        game = new Game();
+    });
     </script>
 </body>
 </html>
